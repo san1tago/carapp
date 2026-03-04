@@ -30,6 +30,10 @@ export type ExtintorData = {
   notificationIds: string[];
 };
 
+export type KitCarreteraData = {
+  items: string[];
+};
+
 export type Vehicle = {
   id: string;
   type: VehicleType;
@@ -41,6 +45,7 @@ export type Vehicle = {
   soat: SoatData;
   tecnomecanica: TecnomecanicaData;
   extintor: ExtintorData;
+  kitCarretera: KitCarreteraData;
 };
 
 type Ctx = {

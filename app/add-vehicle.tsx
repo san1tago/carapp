@@ -67,6 +67,9 @@ export default function AddVehicle() {
       tecnomecanica: { remindersDaysBefore: [], notificationIds: [] },
 
       extintor: { remindersDaysBefore: [], notificationIds: [] },
+      kitCarretera: {
+        items: [],
+      },
     };
 
     addVehicle(v);

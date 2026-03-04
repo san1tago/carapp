@@ -127,11 +127,19 @@ export default function VehicleDetail() {
             </View>
           </Pressable>
 
-          <Pressable style={[styles.bigCard, { flex: 1 }]}>
+          <Pressable
+            style={[styles.bigCard, { flex: 1 }]}
+            onPress={() =>
+              router.push({
+                pathname: "/vehicle/[id]/kitcarretera",
+                params: { id: String(v.id) },
+              })
+            }
+          >
             <Text style={styles.cardTitle}>
               Demás elementos kit de carretera
             </Text>
-            <Text style={styles.counterRed}>✓ 0 de 9</Text>
+            <Text style={styles.counterRed}>✓ 0 de 8</Text>
           </Pressable>
         </View>
 
