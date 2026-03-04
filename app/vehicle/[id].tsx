@@ -143,7 +143,15 @@ export default function VehicleDetail() {
           </Pressable>
         </View>
 
-        <Pressable style={styles.bigCard}>
+        <Pressable
+          style={styles.bigCard}
+          onPress={() =>
+            router.push({
+              pathname: "/vehicle/[id]/documentos",
+              params: { id: String(v.id) },
+            })
+          }
+        >
           <Text style={styles.cardTitle}>Documentos necesarios</Text>
           <Text style={styles.counterRed}>✓ 0 de 5 documentos</Text>
         </Pressable>

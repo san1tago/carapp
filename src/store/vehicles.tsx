@@ -34,6 +34,10 @@ export type KitCarreteraData = {
   items: string[];
 };
 
+export type DocumentosData = {
+  items: string[];
+};
+
 export type Vehicle = {
   id: string;
   type: VehicleType;
@@ -46,6 +50,7 @@ export type Vehicle = {
   tecnomecanica: TecnomecanicaData;
   extintor: ExtintorData;
   kitCarretera: KitCarreteraData;
+  documentos: DocumentosData;
 };
 
 type Ctx = {
