@@ -1,5 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export type VehicleType = "carro" | "moto" | "camion" | "van" | "bus" | "taxi";
 
@@ -10,6 +16,13 @@ export type SoatData = {
   notificationIds: string[];
 };
 
+export type TecnomecanicaData = {
+  reviewDate?: string; // ISO
+  photoUri?: string;
+  remindersDaysBefore: number[];
+  notificationIds: string[];
+};
+
 export type Vehicle = {
   id: string;
   type: VehicleType;
@@ -17,7 +30,9 @@ export type Vehicle = {
   model?: string;
   plate?: string;
   photoUri?: string;
+
   soat: SoatData;
+  tecnomecanica: TecnomecanicaData;
 };
 
 type Ctx = {
@@ -49,12 +64,18 @@ export function VehiclesProvider({ children }: { children: React.ReactNode }) {
       vehicles,
       addVehicle: (v) => setVehicles((prev) => [v, ...prev]),
       updateVehicle: (id, patch) =>
-        setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, ...patch } : v))),
+        setVehicles((prev) =>
+          prev.map((v) => (v.id === id ? { ...v, ...patch } : v)),
+        ),
       getVehicle: (id) => vehicles.find((v) => v.id === id),
     };
   }, [vehicles]);
 
-  return <VehiclesContext.Provider value={value}>{children}</VehiclesContext.Provider>;
+  return (
+    <VehiclesContext.Provider value={value}>
+      {children}
+    </VehiclesContext.Provider>
+  );
 }
 
 export function useVehicles() {

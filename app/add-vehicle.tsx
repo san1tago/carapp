@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-    FlatList,
-    Pressable,
-    StyleSheet,
-    Text,
-    useWindowDimensions,
-    View,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVehicles, Vehicle, VehicleType } from "../src/store/vehicles";
@@ -63,6 +63,8 @@ export default function AddVehicle() {
       model: "",
       plate: "",
       soat: { remindersDaysBefore: [], notificationIds: [] },
+
+      tecnomecanica: { remindersDaysBefore: [], notificationIds: [] },
     };
 
     addVehicle(v);
@@ -77,7 +79,11 @@ export default function AddVehicle() {
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={styles.backBtn}
+        >
           <Text style={styles.backTxt}>←</Text>
         </Pressable>
 
