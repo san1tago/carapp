@@ -1,6 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVehicles } from "../../src/store/vehicles";
 import { colors } from "../../src/theme/colors";
@@ -17,7 +24,7 @@ export default function VehicleDetail() {
       model: v.model ?? "",
       plate: v.plate ?? "",
     }),
-    [v.id]
+    [v.id],
   );
 
   const [name, setName] = useState(initial.name);
@@ -44,7 +51,9 @@ export default function VehicleDetail() {
         <Pressable onPress={() => router.back()} style={styles.back}>
           <Text style={styles.backTxt}>←</Text>
         </Pressable>
-        <Text style={styles.title}>{name?.trim() ? name : "Nuevo vehículo"}</Text>
+        <Text style={styles.title}>
+          {name?.trim() ? name : "Nuevo vehículo"}
+        </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -90,7 +99,10 @@ export default function VehicleDetail() {
         <Pressable
           style={styles.bigCard}
           onPress={() =>
-            router.push({ pathname: "/vehicle/[id]/tecnicomecanica", params: { id: String(v.id) } })
+            router.push({
+              pathname: "/vehicle/[id]/tecnicomecanica",
+              params: { id: String(v.id) },
+            })
           }
         >
           <Text style={styles.cardTitle}>Revisión Técnico Mecánica</Text>
@@ -99,7 +111,56 @@ export default function VehicleDetail() {
           </View>
         </Pressable>
 
-        {/* luego agregamos Extintor, Kit, etc. */}
+        <View style={styles.row}>
+          <Pressable style={[styles.smallCard, { flex: 1 }]}>
+            <Text style={styles.cardTitle}>Extintor</Text>
+            <View style={styles.cardBtn}>
+              <Text style={styles.cardBtnTxt}>Añadir Extintor</Text>
+            </View>
+          </Pressable>
+
+          <Pressable style={[styles.smallCard, { flex: 1 }]}>
+            <Text style={styles.cardTitle}>
+              Demás elementos kit de carretera
+            </Text>
+            <Text style={styles.counterRed}>✓ 0 de 9</Text>
+          </Pressable>
+        </View>
+
+        <Pressable style={styles.bigCard}>
+          <Text style={styles.cardTitle}>Documentos necesarios</Text>
+          <Text style={styles.counterRed}>✓ 0 de 5 documentos</Text>
+        </Pressable>
+
+        <Pressable style={styles.bigCard}>
+          <Text style={styles.cardTitle}>Seguro adicional</Text>
+          <Text style={styles.optional}>Opcional - No obligatorio</Text>
+          <View style={styles.cardBtn}>
+            <Text style={styles.cardBtnTxt}>Añadir seguro</Text>
+          </View>
+        </Pressable>
+
+        <Text style={styles.sectionLabel}>
+          Solo en vehículos de servicio público:
+        </Text>
+
+        <View style={styles.row}>
+          <Pressable style={[styles.smallCard, { flex: 1 }]}>
+            <Text style={styles.cardTitle}>Tarjeta de operación</Text>
+            <Text style={styles.optionalSmall}>Solo servicio público</Text>
+            <View style={styles.cardBtn}>
+              <Text style={styles.cardBtnTxt}>Añadir tarjeta</Text>
+            </View>
+          </Pressable>
+
+          <Pressable style={[styles.smallCard, { flex: 1 }]}>
+            <Text style={styles.cardTitle}>Extracto de contrato</Text>
+            <Text style={styles.optionalSmall}>Solo servicio público</Text>
+            <View style={styles.cardBtn}>
+              <Text style={styles.cardBtnTxt}>Añadir extracto</Text>
+            </View>
+          </Pressable>
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -117,10 +178,22 @@ export default function VehicleDetail() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 10 },
+  header: {
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   back: { padding: 6 },
   backTxt: { color: colors.white, fontSize: 22, fontWeight: "900" },
-  title: { color: colors.white, fontSize: 22, fontWeight: "900", fontStyle: "italic" },
+  title: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: "900",
+    fontStyle: "italic",
+  },
 
   content: { paddingHorizontal: 18, paddingBottom: 24, gap: 12 },
   input: {
@@ -146,8 +219,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  photoTitle: { color: colors.white, fontWeight: "900", fontStyle: "italic", fontSize: 18 },
-  photoSub: { color: "rgba(255,255,255,0.55)", fontWeight: "800", fontStyle: "italic" },
+  photoTitle: {
+    color: colors.white,
+    fontWeight: "900",
+    fontStyle: "italic",
+    fontSize: 18,
+  },
+  photoSub: {
+    color: "rgba(255,255,255,0.55)",
+    fontWeight: "800",
+    fontStyle: "italic",
+  },
 
   bigCard: {
     borderRadius: 18,
@@ -157,7 +239,50 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
   },
-  cardTitle: { color: colors.white, fontWeight: "900", fontStyle: "italic", fontSize: 18 },
+  row: {
+    flexDirection: "row",
+    gap: 12,
+  },
+
+  smallCard: {
+    borderRadius: 18,
+    backgroundColor: colors.card2,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    padding: 16,
+    gap: 12,
+  },
+
+  counterRed: {
+    color: "#ff4d4f",
+    fontWeight: "900",
+    fontStyle: "italic",
+  },
+
+  optional: {
+    color: "rgba(255,255,255,0.5)",
+    fontWeight: "800",
+    fontStyle: "italic",
+  },
+
+  optionalSmall: {
+    color: "rgba(255,255,255,0.4)",
+    fontSize: 12,
+    fontStyle: "italic",
+  },
+
+  sectionLabel: {
+    color: "rgba(255,255,255,0.4)",
+    fontSize: 12,
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  cardTitle: {
+    color: colors.white,
+    fontWeight: "900",
+    fontStyle: "italic",
+    fontSize: 18,
+  },
   cardBtn: {
     height: 44,
     borderRadius: 12,
@@ -168,7 +293,11 @@ const styles = StyleSheet.create({
   },
   cardBtnTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
 
-  footer: { padding: 18, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.06)" },
+  footer: {
+    padding: 18,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.06)",
+  },
   save: {
     height: 54,
     borderRadius: 14,

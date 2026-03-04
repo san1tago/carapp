@@ -3,11 +3,16 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { cancelNotifications, scheduleSoatReminders } from "../../../src/notifications/scheduler";
+import {
+  cancelNotifications,
+  scheduleSoatReminders,
+} from "../../../src/notifications/scheduler";
 import { useVehicles } from "../../../src/store/vehicles";
 import { colors } from "../../../src/theme/colors";
 
-const reminderPresets = [
+const reminderOptions = [
+  { label: "1 día", days: 1 },
+  { label: "3 días", days: 3 },
   { label: "1 semana", days: 7 },
   { label: "2 semanas", days: 14 },
   { label: "1 mes", days: 30 },
@@ -27,14 +32,16 @@ export default function SoatScreen() {
   }, [v]);
 
   const [purchaseDate, setPurchaseDate] = useState(initial.purchaseDate);
-  const [reminders, setReminders] = useState<number[]>(initial.reminders);
+  const [reminders, setReminders] = useState<number[]>(initial.reminders || []);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Dirty check (habilita Guardar cuando cambie algo)
   const canSave =
     !saving &&
     (purchaseDate !== initial.purchaseDate ||
-      JSON.stringify(reminders.slice().sort()) !== JSON.stringify(initial.reminders.slice().sort()));
+      JSON.stringify(reminders.slice().sort()) !==
+        JSON.stringify(initial.reminders.slice().sort()));
 
   useEffect(() => {
     setPurchaseDate(initial.purchaseDate);
@@ -43,8 +50,22 @@ export default function SoatScreen() {
 
   if (!v) return null;
 
-  const toggleReminder = (days: number) => {
-    setReminders((prev) => (prev.includes(days) ? prev.filter((d) => d !== days) : [...prev, days]));
+  const addReminder = () => {
+    if (!purchaseDate) return;
+    setReminders((prev) => [...prev, 7]); // default 1 semana
+  };
+
+  const updateReminder = (index: number, days: number) => {
+    setReminders((prev) => {
+      const copy = [...prev];
+      copy[index] = days;
+      return copy;
+    });
+    setOpenIndex(null);
+  };
+
+  const removeReminder = (index: number) => {
+    setReminders((prev) => prev.filter((_, i) => i !== index));
   };
 
   const save = async () => {
@@ -107,25 +128,69 @@ export default function SoatScreen() {
 
         <View style={styles.remHeader}>
           <Text style={styles.remTitle}>Recordatorios</Text>
-          <Pressable style={styles.addBtn}>
+          <Pressable style={styles.addBtn} onPress={addReminder}>
             <Text style={styles.addBtnTxt}>+ Añadir</Text>
           </Pressable>
         </View>
 
         <View style={styles.remList}>
-          {reminderPresets.map((r) => {
-            const on = reminders.includes(r.days);
+          {reminders.length === 0 && (
+            <Text style={styles.emptyTxt}>
+              No hay recordatorios configurados
+            </Text>
+          )}
+
+          {reminders.map((days, index) => {
+            const selectedOption =
+              reminderOptions.find((o) => o.days === days)?.label || "";
+
             return (
-              <Pressable
-                key={r.days}
-                onPress={() => toggleReminder(r.days)}
-                style={[styles.remRow, on && styles.remRowOn]}
+              <View
+                key={index}
+                style={[
+                  styles.reminderCard,
+                  openIndex === index && { zIndex: 1000 },
+                ]}
               >
-                <Text style={styles.remRowTxt}>Recordar {r.label} antes</Text>
-                <Text style={styles.remRowMini}>{on ? "✓" : ""}</Text>
-              </Pressable>
+                <Text style={styles.reminderText}>🔔 Recordar</Text>
+
+                <Pressable
+                  style={styles.dropdown}
+                  onPress={() =>
+                    setOpenIndex(openIndex === index ? null : index)
+                  }
+                >
+                  <Text style={styles.dropdownTxt}>{selectedOption}</Text>
+                </Pressable>
+
+                <Text style={styles.reminderText}>antes</Text>
+
+                <Pressable onPress={() => removeReminder(index)}>
+                  <Text style={styles.deleteTxt}>🗑</Text>
+                </Pressable>
+
+                {openIndex === index && (
+                  <View style={styles.dropdownMenu}>
+                    {reminderOptions.map((opt) => (
+                      <Pressable
+                        key={opt.days}
+                        style={styles.dropdownItem}
+                        onPress={() => updateReminder(index, opt.days)}
+                      >
+                        <Text style={styles.dropdownItemTxt}>{opt.label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
             );
           })}
+          {reminders.length > 0 && (
+            <Text style={styles.recommendTxt}>
+              💡 Recomendamos configurar recordatorios múltiples para mayor
+              seguridad
+            </Text>
+          )}
         </View>
       </View>
 
@@ -135,7 +200,9 @@ export default function SoatScreen() {
           disabled={!canSave || !purchaseDate}
           style={[styles.save, { opacity: canSave && purchaseDate ? 1 : 0.35 }]}
         >
-          <Text style={styles.saveTxt}>{saving ? "Guardando..." : "Guardar SOAT"}</Text>
+          <Text style={styles.saveTxt}>
+            {saving ? "Guardando..." : "Guardar SOAT"}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -144,13 +211,30 @@ export default function SoatScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 10 },
+  header: {
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   back: { padding: 6 },
   backTxt: { color: colors.white, fontSize: 22, fontWeight: "900" },
-  h1: { color: colors.white, fontSize: 22, fontWeight: "900", fontStyle: "italic" },
+  h1: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: "900",
+    fontStyle: "italic",
+  },
 
   body: { flex: 1, paddingHorizontal: 18, paddingTop: 8 },
-  label: { color: colors.white, fontWeight: "900", fontStyle: "italic", marginBottom: 8 },
+  label: {
+    color: colors.white,
+    fontWeight: "900",
+    fontStyle: "italic",
+    marginBottom: 8,
+  },
   input: {
     height: 48,
     borderRadius: 10,
@@ -173,8 +257,18 @@ const styles = StyleSheet.create({
   },
   photoTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
 
-  remHeader: { marginTop: 22, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  remTitle: { color: colors.white, fontWeight: "900", fontStyle: "italic", fontSize: 18 },
+  remHeader: {
+    marginTop: 22,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  remTitle: {
+    color: colors.white,
+    fontWeight: "900",
+    fontStyle: "italic",
+    fontSize: 18,
+  },
   addBtn: {
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.18)",
@@ -184,7 +278,79 @@ const styles = StyleSheet.create({
   },
   addBtnTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
 
-  remList: { marginTop: 10, gap: 10 },
+  emptyTxt: {
+    color: "rgba(255,255,255,0.5)",
+    fontStyle: "italic",
+  },
+
+  reminderCard: {
+    backgroundColor: colors.card2,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    position: "relative",
+  },
+
+  reminderText: {
+    color: colors.white,
+    fontWeight: "900",
+    fontStyle: "italic",
+  },
+
+  dropdown: {
+    backgroundColor: "#2e3b4e",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+
+  dropdownTxt: {
+    color: colors.white,
+    fontWeight: "900",
+    fontStyle: "italic",
+  },
+
+  deleteTxt: {
+    color: "#ff4d4f",
+    fontSize: 16,
+  },
+
+  dropdownMenu: {
+    position: "absolute",
+    top: 60,
+    left: 80,
+    backgroundColor: "#1f2a38",
+    borderRadius: 12,
+    paddingVertical: 8,
+    width: 160,
+    elevation: 20, // Android
+  },
+
+  dropdownItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+
+  dropdownItemTxt: {
+    color: colors.white,
+    fontWeight: "800",
+  },
+
+  remList: {
+    marginTop: 10,
+    gap: 10,
+  },
+
+  recommendTxt: {
+    marginTop: 10,
+    color: "#ffc107",
+    fontWeight: "900",
+    fontStyle: "italic",
+  },
   remRow: {
     height: 54,
     borderRadius: 14,
@@ -200,7 +366,11 @@ const styles = StyleSheet.create({
   remRowTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
   remRowMini: { color: colors.white, fontWeight: "900" },
 
-  footer: { padding: 18, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.06)" },
+  footer: {
+    padding: 18,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.06)",
+  },
   save: {
     height: 54,
     borderRadius: 14,
