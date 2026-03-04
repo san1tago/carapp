@@ -112,14 +112,22 @@ export default function VehicleDetail() {
         </Pressable>
 
         <View style={styles.row}>
-          <Pressable style={[styles.smallCard, { flex: 1 }]}>
+          <Pressable
+            style={[styles.bigCard, { flex: 1 }]}
+            onPress={() =>
+              router.push({
+                pathname: "/vehicle/[id]/extintor",
+                params: { id: String(v.id) },
+              })
+            }
+          >
             <Text style={styles.cardTitle}>Extintor</Text>
             <View style={styles.cardBtn}>
               <Text style={styles.cardBtnTxt}>Añadir Extintor</Text>
             </View>
           </Pressable>
 
-          <Pressable style={[styles.smallCard, { flex: 1 }]}>
+          <Pressable style={[styles.bigCard, { flex: 1 }]}>
             <Text style={styles.cardTitle}>
               Demás elementos kit de carretera
             </Text>

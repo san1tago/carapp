@@ -23,6 +23,13 @@ export type TecnomecanicaData = {
   notificationIds: string[];
 };
 
+export type ExtintorData = {
+  purchaseDate?: string;
+  photoUri?: string;
+  remindersDaysBefore: number[];
+  notificationIds: string[];
+};
+
 export type Vehicle = {
   id: string;
   type: VehicleType;
@@ -33,6 +40,7 @@ export type Vehicle = {
 
   soat: SoatData;
   tecnomecanica: TecnomecanicaData;
+  extintor: ExtintorData;
 };
 
 type Ctx = {

@@ -65,6 +65,8 @@ export default function AddVehicle() {
       soat: { remindersDaysBefore: [], notificationIds: [] },
 
       tecnomecanica: { remindersDaysBefore: [], notificationIds: [] },
+
+      extintor: { remindersDaysBefore: [], notificationIds: [] },
     };
 
     addVehicle(v);
