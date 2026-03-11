@@ -156,7 +156,15 @@ export default function VehicleDetail() {
           <Text style={styles.counterRed}>✓ 0 de 5 documentos</Text>
         </Pressable>
 
-        <Pressable style={styles.bigCard}>
+        <Pressable
+          style={styles.bigCard}
+          onPress={() =>
+            router.push({
+              pathname: "/vehicle/[id]/seguro",
+              params: { id: String(v.id) },
+            })
+          }
+        >
           <Text style={styles.cardTitle}>Seguro adicional</Text>
           <Text style={styles.optional}>Opcional - No obligatorio</Text>
           <View style={styles.cardBtn}>

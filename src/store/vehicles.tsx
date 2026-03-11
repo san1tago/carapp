@@ -38,6 +38,15 @@ export type DocumentosData = {
   items: string[];
 };
 
+export type SeguroAdicionalData = {
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  photoUri?: string;
+  remindersDaysBefore: number[];
+  notificationIds: string[];
+};
+
 export type Vehicle = {
   id: string;
   type: VehicleType;
@@ -51,6 +60,7 @@ export type Vehicle = {
   extintor: ExtintorData;
   kitCarretera: KitCarreteraData;
   documentos: DocumentosData;
+  seguroAdicional: SeguroAdicionalData;
 };
 
 type Ctx = {

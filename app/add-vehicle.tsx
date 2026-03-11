@@ -75,6 +75,14 @@ export default function AddVehicle() {
       documentos: {
         items: [],
       },
+
+      seguroAdicional: {
+        type: "",
+        startDate: "",
+        endDate: "",
+        remindersDaysBefore: [],
+        notificationIds: [],
+      },
     };
 
     addVehicle(v);
