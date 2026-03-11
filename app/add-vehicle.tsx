@@ -90,6 +90,9 @@ export default function AddVehicle() {
         remindersDaysBefore: [],
         notificationIds: [],
       },
+      extractoContrato: {
+        info: "",
+      },
     };
 
     addVehicle(v);

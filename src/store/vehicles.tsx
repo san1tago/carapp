@@ -55,6 +55,11 @@ export type TarjetaOperacionData = {
   notificationIds: string[];
 };
 
+export type ExtractoContratoData = {
+  info?: string;
+  photoUri?: string;
+};
+
 export type Vehicle = {
   id: string;
   type: VehicleType;
@@ -70,6 +75,7 @@ export type Vehicle = {
   documentos: DocumentosData;
   seguroAdicional: SeguroAdicionalData;
   tarjetaOperacion: TarjetaOperacionData;
+  extractoContrato: ExtractoContratoData;
 };
 
 type Ctx = {
