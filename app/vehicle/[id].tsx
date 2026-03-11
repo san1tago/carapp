@@ -18,6 +18,31 @@ export default function VehicleDetail() {
   const v = getVehicle(String(id));
   if (!v) return null;
 
+  const soatDate = v.soat?.purchaseDate;
+  const soatVigente = !!soatDate;
+
+  const tecnoDate = v.tecnomecanica?.reviewDate;
+  const tecnoVigente = !!tecnoDate;
+
+  const extintorDate = v.extintor?.purchaseDate;
+  const extintorVigente = !!extintorDate;
+
+  const kitItems = v.kitCarretera?.items ?? [];
+  const kitTotal = kitItems.filter(Boolean).length;
+
+  const documentosItems = v.documentos?.items ?? [];
+  const documentosBase = documentosItems.filter(Boolean).length;
+
+  const soatDoc = v.soat?.purchaseDate ? 1 : 0;
+  const tecnoDoc = v.tecnomecanica?.reviewDate ? 1 : 0;
+
+  const documentosTotal = documentosBase + soatDoc + tecnoDoc;
+
+  const seguroActivo = !!v.seguroAdicional?.type;
+
+  const tarjetaActiva = !!v.tarjetaOperacion?.expeditionDate;
+  const extractoActivo = !!v.extractoContrato?.info;
+
   const initial = useMemo(
     () => ({
       name: v.name ?? "",
@@ -43,6 +68,18 @@ export default function VehicleDetail() {
       pathname: "/vehicle/[id]/soat",
       params: { id: String(v.id) },
     });
+  };
+
+  const getKitColor = () => {
+    if (kitTotal === 0) return "#ff4d4f"; // rojo
+    if (kitTotal === 8) return "#22c55e"; // verde
+    return "#facc15"; // amarillo
+  };
+
+  const getDocsColor = () => {
+    if (documentosTotal === 0) return "#ff4d4f";
+    if (documentosTotal === 5) return "#22c55e";
+    return "#facc15";
   };
 
   return (
@@ -91,9 +128,22 @@ export default function VehicleDetail() {
 
         <Pressable style={styles.bigCard} onPress={goSoat}>
           <Text style={styles.cardTitle}>SOAT</Text>
-          <View style={styles.cardBtn}>
-            <Text style={styles.cardBtnTxt}>Añadir SOAT</Text>
-          </View>
+          {soatVigente ? (
+            <>
+              <Text style={{ color: "#22c55e", fontWeight: "900" }}>
+                ✓ SOAT vigente
+              </Text>
+              <Text
+                style={{ color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}
+              >
+                Se vence el: {soatDate}
+              </Text>
+            </>
+          ) : (
+            <View style={styles.cardBtn}>
+              <Text style={styles.cardBtnTxt}>Añadir SOAT</Text>
+            </View>
+          )}
         </Pressable>
 
         <Pressable
@@ -106,9 +156,22 @@ export default function VehicleDetail() {
           }
         >
           <Text style={styles.cardTitle}>Revisión Técnico Mecánica</Text>
-          <View style={styles.cardBtn}>
-            <Text style={styles.cardBtnTxt}>Añadir Revisión</Text>
-          </View>
+          {tecnoVigente ? (
+            <>
+              <Text style={{ color: "#22c55e", fontWeight: "900" }}>
+                ✓ Revisión vigente
+              </Text>
+              <Text
+                style={{ color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}
+              >
+                Se vence el: {tecnoDate}
+              </Text>
+            </>
+          ) : (
+            <View style={styles.cardBtn}>
+              <Text style={styles.cardBtnTxt}>Añadir Revisión</Text>
+            </View>
+          )}
         </Pressable>
 
         <View style={styles.row}>
@@ -122,9 +185,25 @@ export default function VehicleDetail() {
             }
           >
             <Text style={styles.cardTitle}>Extintor</Text>
-            <View style={styles.cardBtn}>
-              <Text style={styles.cardBtnTxt}>Añadir Extintor</Text>
-            </View>
+            {extintorVigente ? (
+              <>
+                <Text style={{ color: "#22c55e", fontWeight: "900" }}>
+                  ✓ Extintor vigente
+                </Text>
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Se vence el: {extintorDate}
+                </Text>
+              </>
+            ) : (
+              <View style={styles.cardBtn}>
+                <Text style={styles.cardBtnTxt}>Añadir Extintor</Text>
+              </View>
+            )}
           </Pressable>
 
           <Pressable
@@ -139,7 +218,9 @@ export default function VehicleDetail() {
             <Text style={styles.cardTitle}>
               Demás elementos kit de carretera
             </Text>
-            <Text style={styles.counterRed}>✓ 0 de 8</Text>
+            <Text style={{ color: getKitColor(), fontWeight: "900" }}>
+              ✓ {kitTotal} de 8
+            </Text>
           </Pressable>
         </View>
 
@@ -153,7 +234,9 @@ export default function VehicleDetail() {
           }
         >
           <Text style={styles.cardTitle}>Documentos necesarios</Text>
-          <Text style={styles.counterRed}>✓ 0 de 5 documentos</Text>
+          <Text style={{ color: getDocsColor(), fontWeight: "900" }}>
+            ✓ {documentosTotal} de 5 documentos
+          </Text>
         </Pressable>
 
         <Pressable
@@ -166,10 +249,37 @@ export default function VehicleDetail() {
           }
         >
           <Text style={styles.cardTitle}>Seguro adicional</Text>
-          <Text style={styles.optional}>Opcional - No obligatorio</Text>
-          <View style={styles.cardBtn}>
-            <Text style={styles.cardBtnTxt}>Añadir seguro</Text>
-          </View>
+
+          {seguroActivo ? (
+            <>
+              <Text style={{ color: "#22c55e", fontWeight: "900" }}>
+                ✓ Seguro registrado
+              </Text>
+
+              <Text style={{ color: "rgba(255,255,255,0.7)" }}>
+                Tipo: {v.seguroAdicional?.type}
+              </Text>
+
+              {v.seguroAdicional?.endDate && (
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Se vence el: {v.seguroAdicional.endDate}
+                </Text>
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={styles.optional}>Opcional - No obligatorio</Text>
+
+              <View style={styles.cardBtn}>
+                <Text style={styles.cardBtnTxt}>Añadir seguro</Text>
+              </View>
+            </>
+          )}
         </Pressable>
 
         <Text style={styles.sectionLabel}>
@@ -187,10 +297,31 @@ export default function VehicleDetail() {
             }
           >
             <Text style={styles.cardTitle}>Tarjeta de operación</Text>
-            <Text style={styles.optionalSmall}>Solo servicio público</Text>
-            <View style={styles.cardBtn}>
-              <Text style={styles.cardBtnTxt}>Añadir tarjeta</Text>
-            </View>
+
+            {tarjetaActiva ? (
+              <>
+                <Text style={{ color: "#22c55e", fontWeight: "900" }}>
+                  ✓ Tarjeta vigente
+                </Text>
+
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Se vence el: {v.tarjetaOperacion?.expeditionDate}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.optionalSmall}>Solo servicio público</Text>
+
+                <View style={styles.cardBtn}>
+                  <Text style={styles.cardBtnTxt}>Añadir tarjeta</Text>
+                </View>
+              </>
+            )}
           </Pressable>
 
           <Pressable
@@ -203,10 +334,26 @@ export default function VehicleDetail() {
             }
           >
             <Text style={styles.cardTitle}>Extracto de contrato</Text>
-            <Text style={styles.optionalSmall}>Solo servicio público</Text>
-            <View style={styles.cardBtn}>
-              <Text style={styles.cardBtnTxt}>Añadir extracto</Text>
-            </View>
+
+            {extractoActivo ? (
+              <>
+                <Text style={{ color: "#22c55e", fontWeight: "900" }}>
+                  ✓ Registrado
+                </Text>
+
+                <Text style={{ color: "rgba(255,255,255,0.7)" }}>
+                  Info: {v.extractoContrato?.info}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.optionalSmall}>Solo servicio público</Text>
+
+                <View style={styles.cardBtn}>
+                  <Text style={styles.cardBtnTxt}>Añadir extracto</Text>
+                </View>
+              </>
+            )}
           </Pressable>
         </View>
       </ScrollView>
