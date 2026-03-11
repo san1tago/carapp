@@ -7,18 +7,31 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.wrap}>
-        <Pressable 
-        onPress={() => router.push("/add-vehicle")}
-        style={({ pressed }) => [styles.card, pressed ? { opacity: 0.9 } : null]}>
+        <Pressable
+          onPress={() => router.push("/add-vehicle")}
+          style={({ pressed }) => [
+            styles.card,
+            pressed ? { opacity: 0.9 } : null,
+          ]}
+        >
           <Text style={styles.plus}>＋</Text>
           <Text style={styles.txt}>Añadir vehículo</Text>
-          
         </Pressable>
       </View>
 
       {/* Barra inferior “fake” como en tu screenshot */}
       <View style={styles.bottomBar}>
-        <Text style={styles.userIcon}>⦿</Text>
+        <Pressable
+          onPress={() => router.push("/perfil")}
+          style={({ pressed }) => [
+            styles.profileBtn,
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <View style={styles.profileCircle}>
+            <Text style={styles.profileTxt}>👤</Text>
+          </View>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -61,6 +74,26 @@ const styles = StyleSheet.create({
   },
   userIcon: {
     color: "rgba(255,255,255,0.8)",
+    fontSize: 18,
+  },
+
+  profileBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  profileCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 20,
+    backgroundColor: colors.card2,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  profileTxt: {
     fontSize: 18,
   },
 });
