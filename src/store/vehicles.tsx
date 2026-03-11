@@ -47,6 +47,14 @@ export type SeguroAdicionalData = {
   notificationIds: string[];
 };
 
+export type TarjetaOperacionData = {
+  info?: string;
+  expeditionDate?: string;
+  photoUri?: string;
+  remindersDaysBefore: number[];
+  notificationIds: string[];
+};
+
 export type Vehicle = {
   id: string;
   type: VehicleType;
@@ -61,6 +69,7 @@ export type Vehicle = {
   kitCarretera: KitCarreteraData;
   documentos: DocumentosData;
   seguroAdicional: SeguroAdicionalData;
+  tarjetaOperacion: TarjetaOperacionData;
 };
 
 type Ctx = {

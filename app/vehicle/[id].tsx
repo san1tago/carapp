@@ -177,7 +177,15 @@ export default function VehicleDetail() {
         </Text>
 
         <View style={styles.row}>
-          <Pressable style={[styles.smallCard, { flex: 1 }]}>
+          <Pressable
+            style={[styles.smallCard, { flex: 1 }]}
+            onPress={() =>
+              router.push({
+                pathname: "/vehicle/[id]/tarjeta-operacion",
+                params: { id: String(v.id) },
+              })
+            }
+          >
             <Text style={styles.cardTitle}>Tarjeta de operación</Text>
             <Text style={styles.optionalSmall}>Solo servicio público</Text>
             <View style={styles.cardBtn}>

@@ -83,6 +83,13 @@ export default function AddVehicle() {
         remindersDaysBefore: [],
         notificationIds: [],
       },
+
+      tarjetaOperacion: {
+        info: "",
+        expeditionDate: "",
+        remindersDaysBefore: [],
+        notificationIds: [],
+      },
     };
 
     addVehicle(v);
