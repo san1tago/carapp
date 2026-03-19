@@ -61,6 +61,7 @@ export default function VehicleDetail() {
 
   const save = () => {
     updateVehicle(v.id, { name, model, plate });
+    router.replace("/home"); // volver a home
   };
 
   const goSoat = () => {
