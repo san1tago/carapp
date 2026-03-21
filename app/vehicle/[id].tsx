@@ -1,12 +1,15 @@
+import * as FileSystem from "expo-file-system";
+import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  Pressable,
+  Alert, Image, Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  View,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVehicles } from "../../src/store/vehicles";
@@ -17,6 +20,73 @@ export default function VehicleDetail() {
   const { getVehicle, updateVehicle } = useVehicles();
   const v = getVehicle(String(id));
   if (!v) return null;
+
+  const [photo, setPhoto] = useState<string | null>(v.photoUri ?? null);
+
+  const takePhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permission.status !== "granted") {
+      Alert.alert("Permiso necesario", "Activa la cámara en ajustes");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+
+      const savedUri = await saveImageToApp(uri);
+
+      setPhoto(savedUri);
+      updateVehicle(v.id, { photoUri: savedUri });
+    }
+  };
+
+  const pickFromGallery = async () => {
+    const permission =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permission.status !== "granted") {
+      Alert.alert("Permiso necesario", "Activa la galería en ajustes");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+
+      const savedUri = await saveImageToApp(uri);
+
+      setPhoto(savedUri);
+      updateVehicle(v.id, { photoUri: savedUri });
+    }
+  };
+
+const saveImageToApp = async (uri: string) => {
+  try {
+    const fileName = `vehicle_${v.id}_${Date.now()}.jpg`;
+const newPath = (FileSystem as any).documentDirectory + fileName;
+    await FileSystem.copyAsync({
+      from: uri,
+      to: newPath,
+    });
+
+    return newPath;
+  } catch (error) {
+    console.log("Error guardando imagen:", error);
+    return uri; // fallback
+  }
+};
 
   const soatDate = v.soat?.purchaseDate;
   const soatVigente = !!soatDate;
@@ -61,6 +131,7 @@ export default function VehicleDetail() {
 
   const save = () => {
     updateVehicle(v.id, { name, model, plate });
+    router.replace("/home");
   };
 
   const goSoat = () => {
@@ -71,9 +142,9 @@ export default function VehicleDetail() {
   };
 
   const getKitColor = () => {
-    if (kitTotal === 0) return "#ff4d4f"; // rojo
-    if (kitTotal === 8) return "#22c55e"; // verde
-    return "#facc15"; // amarillo
+    if (kitTotal === 0) return "#ff4d4f";
+    if (kitTotal === 8) return "#22c55e";
+    return "#facc15";
   };
 
   const getDocsColor = () => {
@@ -119,11 +190,30 @@ export default function VehicleDetail() {
           autoCapitalize="characters"
         />
 
-        <Pressable style={styles.photoBox}>
-          <Text style={styles.photoTitle}>Tomar foto del vehículo</Text>
-          <Text style={styles.photoSub}>Añade una foto de tu carro</Text>
-        </Pressable>
-
+         {/* FOTO */}
+        <TouchableOpacity
+          style={styles.photoBox}
+          activeOpacity={0.7}
+          onPress={() => {
+            Alert.alert("Añadir foto", "Selecciona una opción", [
+              { text: "Cancelar", style: "cancel" },
+              { text: "Tomar foto", onPress: takePhoto },
+              { text: "Galería", onPress: pickFromGallery },
+            ]);
+          }}
+        >
+          {photo ? (
+            <Image
+              source={{ uri: photo }}
+              style={{ width: "100%", height: "100%", borderRadius: 14 }}
+            />
+          ) : (
+            <>
+              <Text style={styles.photoTitle}>Tomar foto</Text>
+              <Text style={styles.photoSub}>Añade una foto</Text>
+            </>
+          )}
+        </TouchableOpacity>
         <View style={{ height: 18 }} />
 
         <Pressable style={styles.bigCard} onPress={goSoat}>
@@ -146,6 +236,7 @@ export default function VehicleDetail() {
           )}
         </Pressable>
 
+        {/* El resto del código sigue exactamente igual */}
         <Pressable
           style={styles.bigCard}
           onPress={() =>
