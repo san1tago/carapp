@@ -16,7 +16,15 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.wrap}>
+      <View
+        style={[
+          styles.wrap,
+          vehicles.length === 0 && {
+            alignItems: "center",
+            justifyContent: "center",
+          },
+        ]}
+      >
         {vehicles.length === 0 ? (
           <Pressable
             onPress={() => router.push("/add-vehicle")}
@@ -60,12 +68,15 @@ export default function Home() {
           <Text style={styles.profileIcon}>👤</Text>
         </Pressable>
 
-        <Pressable
-          style={styles.addBtn}
-          onPress={() => router.push("/add-vehicle")}
-        >
-          <Text style={styles.addTxt}>＋</Text>
-        </Pressable>
+        {/* SOLO aparece si hay vehículos */}
+        {vehicles.length > 0 && (
+          <Pressable
+            style={styles.addBtn}
+            onPress={() => router.push("/add-vehicle")}
+          >
+            <Text style={styles.addTxt}>＋</Text>
+          </Pressable>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -75,8 +86,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   wrap: {
     flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 18,
+    padding: 20,
   },
 
   card: {
