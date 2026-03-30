@@ -3,6 +3,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PhotoInput from "../../../components/PhotoInput";
+
 import {
   cancelNotifications,
   scheduleSoatReminders,
@@ -122,9 +124,15 @@ export default function SoatScreen() {
         />
 
         <Text style={[styles.label, { marginTop: 18 }]}>Foto del SOAT</Text>
-        <Pressable style={styles.photoBox}>
-          <Text style={styles.photoTxt}>Tomar foto del SOAT</Text>
-        </Pressable>
+        <PhotoInput
+          value={v.soat?.photoUri}
+          fileName={`soat_${v.id}.jpg`}
+          onChange={(uri) =>
+            updateVehicle(v.id, {
+              soat: { ...v.soat, photoUri: uri },
+            })
+          }
+        />
 
         <View style={styles.remHeader}>
           <Text style={styles.remTitle}>Recordatorios</Text>

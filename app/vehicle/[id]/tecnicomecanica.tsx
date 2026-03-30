@@ -3,9 +3,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PhotoInput from "../../../components/PhotoInput";
+
 import {
-    cancelNotifications,
-    scheduleSoatReminders,
+  cancelNotifications,
+  scheduleSoatReminders,
 } from "../../../src/notifications/scheduler";
 import { useVehicles } from "../../../src/store/vehicles";
 import { colors } from "../../../src/theme/colors";
@@ -117,9 +119,15 @@ export default function TecnicoMecanicaScreen() {
         <Text style={[styles.label, { marginTop: 18 }]}>
           Foto de la revisión técnica
         </Text>
-        <Pressable style={styles.photoBox}>
-          <Text style={styles.photoTxt}>Tomar foto de la revisión técnica</Text>
-        </Pressable>
+        <PhotoInput
+          value={v.tecnomecanica?.photoUri}
+          fileName={`tecnomecanica_${v.id}.jpg`}
+          onChange={(uri) =>
+            updateVehicle(v.id, {
+              tecnomecanica: { ...v.tecnomecanica, photoUri: uri },
+            })
+          }
+        />
 
         {/* RECORDATORIOS */}
 

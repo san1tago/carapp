@@ -1,19 +1,21 @@
 import * as Notifications from "expo-notifications";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+import PhotoInput from "../../../components/PhotoInput";
+
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
-    cancelNotifications,
-    scheduleSoatReminders,
+  cancelNotifications,
+  scheduleSoatReminders,
 } from "../../../src/notifications/scheduler";
 
 import { useVehicles } from "../../../src/store/vehicles";
@@ -169,9 +171,15 @@ export default function SeguroAdicionalScreen() {
 
         <Text style={styles.label}>Foto del seguro</Text>
 
-        <Pressable style={styles.photoBox}>
-          <Text style={styles.photoTxt}>Tomar foto del seguro</Text>
-        </Pressable>
+        <PhotoInput
+          value={v.seguroAdicional?.photoUri}
+          fileName={`seguro_adicional_${v.id}.jpg`}
+          onChange={(uri) =>
+            updateVehicle(v.id, {
+              seguroAdicional: { ...v.seguroAdicional, photoUri: uri },
+            })
+          }
+        />
 
         {/* RECORDATORIOS */}
 

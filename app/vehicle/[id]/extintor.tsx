@@ -3,10 +3,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PhotoInput from "../../../components/PhotoInput";
+
 
 import {
-    cancelNotifications,
-    scheduleSoatReminders,
+  cancelNotifications,
+  scheduleSoatReminders,
 } from "../../../src/notifications/scheduler";
 
 import { useVehicles } from "../../../src/store/vehicles";
@@ -121,9 +123,15 @@ export default function ExtintorScreen() {
 
         <Text style={[styles.label, { marginTop: 18 }]}>Foto del extintor</Text>
 
-        <Pressable style={styles.photoBox}>
-          <Text style={styles.photoTxt}>Tomar foto del extintor</Text>
-        </Pressable>
+       <PhotoInput
+          value={v.extintor?.photoUri}
+          fileName={`extintor_${v.id}.jpg`}
+          onChange={(uri) =>
+            updateVehicle(v.id, {
+              extintor: { ...v.extintor, photoUri: uri },
+            })
+          }
+        />
 
         <View style={styles.remHeader}>
           <Text style={styles.remTitle}>Recordatorios</Text>

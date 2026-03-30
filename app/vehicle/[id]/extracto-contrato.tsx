@@ -1,12 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+import PhotoInput from "../../../components/PhotoInput";
+
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -71,11 +73,15 @@ export default function ExtractoContratoScreen() {
 
         <Text style={styles.label}>Foto del extracto de contrato</Text>
 
-        <Pressable style={styles.photoBox}>
-          <Text style={styles.photoTxt}>
-            Tomar foto del extracto de contrato
-          </Text>
-        </Pressable>
+       <PhotoInput
+          value={v.extractoContrato?.photoUri}
+          fileName={`extracto_contrato_${v.id}.jpg`}
+          onChange={(uri) =>
+            updateVehicle(v.id, {
+              extractoContrato: { ...v.extractoContrato, photoUri: uri },
+            })
+          }
+        />
 
         <View style={styles.infoBox}>
           <Text style={styles.infoTxt}>
