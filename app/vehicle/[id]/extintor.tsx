@@ -10,8 +10,8 @@ import PhotoInput from "../../../components/PhotoInput";
 
 import {
   cancelNotifications,
-  scheduleSoatReminders,
-} from "../../../src/notifications/scheduler";
+  scheduleDocumentReminders,
+} from "../../../src/notifications/reminderEngine";
 
 import { useVehicles } from "../../../src/store/vehicles";
 import { colors } from "../../../src/theme/colors";
@@ -84,9 +84,14 @@ export default function ExtintorScreen() {
 
     await cancelNotifications(initial.notificationIds);
 
-    const ids = await scheduleSoatReminders({
-      vehicleName: v.name,
-      purchaseDate: new Date(purchaseDate),
+      const ids = await scheduleDocumentReminders({
+      title: "Extintor",
+      body: `El extintor de ${v.name}`,
+      baseDate: new Date(purchaseDate),
+
+      // 🔥 CLAVE: duración del extintor
+      durationDays: 365,
+
       reminderDaysBefore: reminders,
     });
 
