@@ -13,11 +13,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import {
   cancelNotifications,
-  scheduleSoatReminders,
-} from "../../../src/notifications/scheduler";
+  scheduleDocumentReminders,
+} from "../../../src/notifications/reminderEngine";
 
 import { useVehicles } from "../../../src/store/vehicles";
 import { colors } from "../../../src/theme/colors";
@@ -85,11 +84,13 @@ export default function TarjetaOperacionScreen() {
     setReminders((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const save = async () => {
-    if (!expeditionDate) return;
+  
+const save = async () => {
+  if (!expeditionDate) return;
 
-    setSaving(true);
+  setSaving(true);
 
+  try {
     const perm = await Notifications.getPermissionsAsync();
     if (perm.status !== "granted") {
       await Notifications.requestPermissionsAsync();
@@ -97,12 +98,33 @@ export default function TarjetaOperacionScreen() {
 
     await cancelNotifications(initial.notificationIds);
 
-    const ids = await scheduleSoatReminders({
-      vehicleName: v.name + " - Tarjeta de operación",
-      purchaseDate: new Date(expeditionDate),
+    // 📅 parsear fecha correctamente
+    function parseLocalDate(dateString: string) {
+      const [year, month, day] = dateString.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    const baseDate = parseLocalDate(expeditionDate);
+
+    if (isNaN(baseDate.getTime())) {
+      alert("Fecha inválida");
+      setSaving(false);
+      return;
+    }
+
+    // 📅 duración fija: 1 año
+    const durationDays = 365;
+
+    // 🔔 programar recordatorios
+    const ids = await scheduleDocumentReminders({
+      title: "Tarjeta de operación",
+      body: `La tarjeta de operación de ${v.name}`,
+      baseDate: baseDate,
+      durationDays: durationDays,
       reminderDaysBefore: reminders,
     });
 
+    // 💾 guardar
     updateVehicle(v.id, {
       tarjetaOperacion: {
         info,
@@ -112,9 +134,13 @@ export default function TarjetaOperacionScreen() {
       },
     });
 
-    setSaving(false);
     router.back();
-  };
+  } catch (error) {
+    console.log("Error guardando tarjeta operación:", error);
+  } finally {
+    setSaving(false);
+  }
+};
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
