@@ -17,8 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   cancelNotifications,
-  scheduleSoatReminders,
-} from "../../../src/notifications/scheduler";
+  scheduleDocumentReminders,
+} from "../../../src/notifications/reminderEngine";
 
 import { useVehicles } from "../../../src/store/vehicles";
 import { colors } from "../../../src/theme/colors";
@@ -89,11 +89,12 @@ export default function SeguroAdicionalScreen() {
     setReminders((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const save = async () => {
-    if (!endDate) return;
+const save = async () => {
+  if (!endDate) return;
 
-    setSaving(true);
+  setSaving(true);
 
+  try {
     const perm = await Notifications.getPermissionsAsync();
     if (perm.status !== "granted") {
       await Notifications.requestPermissionsAsync();
@@ -101,12 +102,50 @@ export default function SeguroAdicionalScreen() {
 
     await cancelNotifications(initial.notificationIds);
 
-    const ids = await scheduleSoatReminders({
-      vehicleName: v.name + " - Seguro adicional",
-      purchaseDate: new Date(endDate),
+    function parseLocalDate(dateString: string) {
+    const [year, month, day] = dateString.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+    if (!startDate || !endDate) {
+      setSaving(false);
+      return;
+    }
+
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
+    
+    console.log(start.toDateString(), end.toDateString());
+    
+    // ❌ Validar fechas inválidas
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      alert("Fechas inválidas");
+      setSaving(false);
+      return;
+    }
+
+    // ❌ Validar orden correcto
+    if (end <= start) {
+      alert("La fecha de vencimiento debe ser mayor a la de inicio");
+      setSaving(false);
+      return;
+    }
+
+    // 📅 Calcular duración
+    const durationDays = Math.round(
+      (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // 🔔 Programar notificaciones
+    const ids = await scheduleDocumentReminders({
+      title: "Seguro adicional",
+      body: `El seguro adicional de ${v.name}`,
+      baseDate: start,
+      durationDays: durationDays,
       reminderDaysBefore: reminders,
     });
 
+    // 💾 Guardar en store
     updateVehicle(v.id, {
       seguroAdicional: {
         type,
@@ -117,9 +156,13 @@ export default function SeguroAdicionalScreen() {
       },
     });
 
-    setSaving(false);
     router.back();
-  };
+  } catch (error) {
+    console.log("Error guardando seguro adicional:", error);
+  } finally {
+    setSaving(false);
+  }
+};
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
