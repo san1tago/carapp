@@ -1,31 +1,44 @@
 import DateTimePicker, {
-    DateTimePickerAndroid,
+  DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
 import {
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 type Props = {
   value?: string;
   onChange: (date: string) => void;
   label?: string;
-  allowPastDates?: boolean; // 👈 NUEVO
+  allowPastDates?: boolean;
 };
 
 export default function DateInput({
   value,
   onChange,
   label,
-  allowPastDates = true, // 👈 default permite pasado
+  allowPastDates = true,
 }: Props) {
   const [show, setShow] = useState(false);
 
-  const date = value ? new Date(value) : new Date();
+  const parseLocalDate = (dateString: string) => {
+    const [year, month, day] = dateString.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  const formatLocalDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, "0");
+    const day = `${date.getDate()}`.padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const date = value ? parseLocalDate(value) : new Date();
 
   const handleChange = (_: any, selectedDate?: Date) => {
     if (Platform.OS === "ios") {
@@ -34,8 +47,7 @@ export default function DateInput({
 
     if (!selectedDate) return;
 
-    const iso = selectedDate.toISOString().split("T")[0];
-    onChange(iso);
+    onChange(formatLocalDate(selectedDate));
   };
 
   const openPicker = () => {
@@ -43,7 +55,7 @@ export default function DateInput({
       DateTimePickerAndroid.open({
         value: date,
         mode: "date",
-        minimumDate: allowPastDates ? undefined : new Date(), // 🔥 CLAVE
+        minimumDate: allowPastDates ? undefined : new Date(),
         onChange: handleChange,
       });
     } else {
@@ -67,12 +79,13 @@ export default function DateInput({
           mode="date"
           display="spinner"
           onChange={handleChange}
-          minimumDate={allowPastDates ? undefined : new Date()} // 🔥 CLAVE
+          minimumDate={allowPastDates ? undefined : new Date()}
         />
       )}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   label: {
     color: "#fff",

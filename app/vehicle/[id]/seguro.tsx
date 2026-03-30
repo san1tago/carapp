@@ -115,8 +115,7 @@ const save = async () => {
     const start = parseLocalDate(startDate);
     const end = parseLocalDate(endDate);
     
-    console.log(start.toDateString(), end.toDateString());
-    
+
     // ❌ Validar fechas inválidas
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       alert("Fechas inválidas");
