@@ -79,28 +79,26 @@ export async function scheduleDocumentReminders({
 
   const ids: string[] = [];
 
-for (const _ of reminderDates) {
-  const date = new Date(Date.now() + 10000); // 🔥 10 segundos
+  for (const date of reminderDates) {
+    if (date <= now) continue;
 
-  if (date <= now) continue;
-
-  try {
+try {
     const id = await Notifications.scheduleNotificationAsync({
-      content: {
+    content: {
         title,
         body: `${body} vence el ${expirationDate.toLocaleDateString()}`,
         sound: true,
-      },
-      trigger: {
+    },
+    trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
         date: date,
-      },
+    },
     });
 
     ids.push(id);
-  } catch (e) {
+    } catch (e) {
     console.log("Error programando notificación", e);
-  }
+    }
 }
 
     return ids;

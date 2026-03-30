@@ -91,7 +91,7 @@ const save = async () => {
     title: "🚗 SOAT por vencer",
     body: `El SOAT de ${v.name}`,
     baseDate: baseDate,
-    durationDays: 1, // 🔥 UN AÑO AUTOMÁTICO
+    durationDays: 365, // 🔥 UN AÑO AUTOMÁTICO
     reminderDaysBefore: reminders,
   });
 
