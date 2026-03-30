@@ -1,9 +1,11 @@
 import * as Notifications from "expo-notifications";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateInput from "../../../components/DateInput";
 import PhotoInput from "../../../components/PhotoInput";
+
 
 import {
   cancelNotifications,
@@ -107,14 +109,14 @@ export default function TecnicoMecanicaScreen() {
         <Text style={styles.h1}>Revisión Técnico Mecánica - {v.name}</Text>
       </View>
       <View style={styles.body}>
-        <Text style={styles.label}>Fecha de la revisión técnica</Text>
-        <TextInput
-          value={reviewDate}
-          onChangeText={setReviewDate}
-          placeholder="dd/mm/aaaa"
-          placeholderTextColor="rgba(255,255,255,0.35)"
-          style={styles.input}
-        />
+         <DateInput
+                  label="Fecha de la Revisión Técnico Mecánica"
+                  value={reviewDate}
+                  onChange={setReviewDate}
+                  allowPastDates={false}
+
+                />
+        
 
         <Text style={[styles.label, { marginTop: 18 }]}>
           Foto de la revisión técnica

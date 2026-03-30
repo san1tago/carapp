@@ -1,6 +1,7 @@
 import * as Notifications from "expo-notifications";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+import DateInput from "../../../components/DateInput";
 import PhotoInput from "../../../components/PhotoInput";
 
 import {
@@ -140,16 +141,14 @@ export default function TarjetaOperacionScreen() {
           Registra la información relevante de tu tarjeta de operación
         </Text>
 
-        <Text style={styles.label}>Fecha de expedición de la tarjeta</Text>
-
-        <TextInput
+        <DateInput
+          label="Fecha de expedición de la tarjeta de operación"
           value={expeditionDate}
-          onChangeText={setExpeditionDate}
-          placeholder="dd/mm/aaaa"
-          placeholderTextColor="rgba(255,255,255,0.35)"
-          style={styles.input}
-        />
+          onChange={setExpeditionDate}
+          allowPastDates={true}
 
+        />
+        
         <Text style={styles.label}></Text>
 
         <Text style={styles.label}>Foto de la tarjeta de operación</Text>

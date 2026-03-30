@@ -1,9 +1,11 @@
 import * as Notifications from "expo-notifications";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateInput from "../../../components/DateInput";
 import PhotoInput from "../../../components/PhotoInput";
+
 
 
 import {
@@ -110,15 +112,13 @@ export default function ExtintorScreen() {
         <Text style={styles.h1}>Extintor - {v.name}</Text>
       </View>
 
-      <View style={styles.body}>
-        <Text style={styles.label}>Fecha de compra del extintor</Text>
-
-        <TextInput
+<View style={styles.body}>
+        <DateInput
+          label="Fecha de compra del Extintor"
           value={purchaseDate}
-          onChangeText={setPurchaseDate}
-          placeholder="dd/mm/aaaa"
-          placeholderTextColor="rgba(255,255,255,0.35)"
-          style={styles.input}
+          onChange={setPurchaseDate}
+          allowPastDates={true}
+
         />
 
         <Text style={[styles.label, { marginTop: 18 }]}>Foto del extintor</Text>

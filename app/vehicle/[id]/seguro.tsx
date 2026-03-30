@@ -1,7 +1,9 @@
 import * as Notifications from "expo-notifications";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+import DateInput from "../../../components/DateInput";
 import PhotoInput from "../../../components/PhotoInput";
+
 
 import {
   Pressable,
@@ -144,26 +146,24 @@ export default function SeguroAdicionalScreen() {
           Especifica el tipo de seguro adicional que tienes contratado
         </Text>
 
-        <Text style={styles.label}>Fecha de inicio del seguro</Text>
+       
+        <DateInput
+                  label="Fecha de inicio del seguro"
+                  value={startDate}
+                  onChange={setStartDate}
+                  allowPastDates={true}
 
-        <TextInput
-          value={startDate}
-          onChangeText={setStartDate}
-          placeholder="dd/mm/aaaa"
-          placeholderTextColor="rgba(255,255,255,0.35)"
-          style={styles.input}
-        />
+                />
 
-        <Text style={styles.label}>Fecha de vencimiento del seguro</Text>
+         <DateInput
+                  label="Fecha de vencimiento del seguro"
+                  value={endDate}
+                  onChange={setEndDate}
+                  allowPastDates={false}
 
-        <TextInput
-          value={endDate}
-          onChangeText={setEndDate}
-          placeholder="dd/mm/aaaa"
-          placeholderTextColor="rgba(255,255,255,0.35)"
-          style={styles.input}
-        />
+                />
 
+                
         <Text style={styles.help}>
           Los seguros pueden tener diferentes temporalidades (6 meses, 1 año,
           etc.)
