@@ -6,11 +6,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DateInput from "../../../components/DateInput";
 import PhotoInput from "../../../components/PhotoInput";
 
-
 import {
   cancelNotifications,
-  scheduleSoatReminders,
-} from "../../../src/notifications/scheduler";
+  scheduleDocumentReminders,
+} from "../../../src/notifications/reminderEngine";
+
 import { useVehicles } from "../../../src/store/vehicles";
 import { colors } from "../../../src/theme/colors";
 
@@ -81,9 +81,14 @@ export default function TecnicoMecanicaScreen() {
 
     await cancelNotifications(initial.notificationIds);
 
-    const ids = await scheduleSoatReminders({
-      vehicleName: v.name,
-      purchaseDate: new Date(reviewDate),
+    const ids = await scheduleDocumentReminders({
+      title: "Revisión técnico mecánica",
+      body: `La revisión técnico mecánica de ${v.name}`,
+      baseDate: new Date(reviewDate),
+
+      // 🔥 CLAVE: duración
+      durationDays: 365,
+
       reminderDaysBefore: reminders,
     });
 
