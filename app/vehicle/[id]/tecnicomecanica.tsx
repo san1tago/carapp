@@ -115,10 +115,10 @@ export default function TecnicoMecanicaScreen() {
       </View>
       <View style={styles.body}>
          <DateInput
-                  label="Fecha de la Revisión Técnico Mecánica"
+                  label="Fecha de la ultima Revisión Técnico Mecánica"
                   value={reviewDate}
                   onChange={setReviewDate}
-                  allowPastDates={false}
+                  allowPastDates={true}
 
                 />
         
