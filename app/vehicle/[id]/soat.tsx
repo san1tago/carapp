@@ -8,8 +8,8 @@ import PhotoInput from "../../../components/PhotoInput";
 
 import {
   cancelNotifications,
-  scheduleSoatReminders,
-} from "../../../src/notifications/scheduler";
+  scheduleDocumentReminders,
+} from "../../../src/notifications/reminderEngine";
 import { useVehicles } from "../../../src/store/vehicles";
 import { colors } from "../../../src/theme/colors";
 
@@ -70,40 +70,43 @@ export default function SoatScreen() {
   const removeReminder = (index: number) => {
     setReminders((prev) => prev.filter((_, i) => i !== index));
   };
+const save = async () => {
+  if (!purchaseDate) return;
 
-  const save = async () => {
-    if (!purchaseDate) return;
+  setSaving(true);
 
-    setSaving(true);
+  // permisos notificaciones
+  const perm = await Notifications.getPermissionsAsync();
+  if (perm.status !== "granted") {
+    await Notifications.requestPermissionsAsync();
+  }
 
-    // permisos notificaciones
-    const perm = await Notifications.getPermissionsAsync();
-    if (perm.status !== "granted") {
-      await Notifications.requestPermissionsAsync();
-    }
+  // cancelar notificaciones viejas
+  await cancelNotifications(initial.notificationIds);
 
-    // cancela notificaciones viejas
-    await cancelNotifications(initial.notificationIds);
+  const baseDate = new Date(purchaseDate);
 
-    // programa nuevas
-    const ids = await scheduleSoatReminders({
-      vehicleName: v.name,
-      purchaseDate: new Date(purchaseDate),
-      reminderDaysBefore: reminders,
-    });
+  // 🔥 AQUÍ ESTÁ LA MAGIA
+  const ids = await scheduleDocumentReminders({
+    title: "🚗 SOAT por vencer",
+    body: `El SOAT de ${v.name}`,
+    baseDate: baseDate,
+    durationDays: 1, // 🔥 UN AÑO AUTOMÁTICO
+    reminderDaysBefore: reminders,
+  });
 
-    updateVehicle(v.id, {
-      soat: {
-        ...v.soat,
-        purchaseDate,
-        remindersDaysBefore: reminders,
-        notificationIds: ids,
-      },
-    });
+  updateVehicle(v.id, {
+    soat: {
+      ...v.soat,
+      purchaseDate,
+      remindersDaysBefore: reminders,
+      notificationIds: ids,
+    },
+  });
 
-    setSaving(false);
-    router.back();
-  };
+  setSaving(false);
+  router.back();
+};
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>

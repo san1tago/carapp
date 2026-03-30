@@ -1,8 +1,18 @@
 import { Stack } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
+import { configureNotifications, setupAndroidChannel } from "../src/notifications/reminderEngine";
 import { VehiclesProvider } from "../src/store/vehicles";
 
+
 export default function RootLayout() {
+    useEffect(() => {
+    configureNotifications();
+  }, []);
+
+  useEffect(() => {
+    configureNotifications();
+    setupAndroidChannel(); // 
+  }, []);
   return (
     <VehiclesProvider>
       <Stack
