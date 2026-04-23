@@ -14,6 +14,41 @@ import { colors } from "../src/theme/colors";
 export default function Home() {
   const { vehicles } = useVehicles();
 
+  // 🔥 FUNCIÓN DE ICONO
+  const getVehicleIcon = (type?: string) => {
+    const t = type?.toLowerCase();
+
+    switch (t) {
+      case "carro":
+      case "auto":
+        return "🚗";
+
+      case "moto":
+      case "motocicleta":
+        return "🏍️";
+
+      case "camion":
+      case "camión":
+        return "🚛";
+
+      case "bus":
+      case "buseta":
+        return "🚌";
+
+      case "van":
+        return "🚐";
+
+      case "bicicleta":
+        return "🚲";
+
+      case "taxi":
+        return "🚕"; // ✅ TAXI
+
+      default:
+        return "🚗";
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <View
@@ -53,7 +88,11 @@ export default function Home() {
                     })
                   }
                 >
-                  <Text style={styles.vehicleIcon}>🚗</Text>
+                  {/* 🔥 ICONO DINÁMICO */}
+                  <Text style={styles.vehicleIcon}>
+                    {getVehicleIcon(item.type)}
+                  </Text>
+
                   <Text style={styles.vehicleName}>{item.name}</Text>
                 </Pressable>
               )}
@@ -62,13 +101,12 @@ export default function Home() {
         )}
       </View>
 
-      {/* Barra inferior “fake” como en tu screenshot */}
+      {/* Barra inferior */}
       <View style={styles.bottomBar}>
         <Pressable onPress={() => router.push("/perfil")}>
           <Text style={styles.profileIcon}>👤</Text>
         </Pressable>
 
-        {/* SOLO aparece si hay vehículos */}
         {vehicles.length > 0 && (
           <Pressable
             style={styles.addBtn}
@@ -89,17 +127,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
-  card: {
-    width: 140,
-    height: 170,
-    borderRadius: 16,
-    backgroundColor: colors.card2,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
   plus: {
     color: colors.white,
     fontSize: 26,
@@ -120,30 +147,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-  },
-  userIcon: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 18,
-  },
-
-  profileBtn: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  profileCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 20,
-    backgroundColor: colors.card2,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  profileTxt: {
-    fontSize: 18,
   },
 
   emptyCard: {
@@ -176,14 +179,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 16,
   },
+
   list: {
     paddingBottom: 120,
     gap: 16,
   },
 
   vehicleIcon: {
-    color: colors.white,
-    fontSize: 18,
+    fontSize: 22, // 🔥 un poco más grande para que se vea mejor
   },
 
   vehicleName: {
