@@ -22,26 +22,37 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.san1t.CarApp"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-"plugins": [
-  "expo-router",
-  "@react-native-community/datetimepicker",
-  [
-    "expo-image-picker",
-    {
-      "photosPermission": "Necesitamos acceso a tus fotos",
-      "cameraPermission": "Necesitamos usar tu cámara"
-    }
-  ]
-],
+    "plugins": [
+      "expo-router",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Necesitamos acceso a tus fotos",
+          "cameraPermission": "Necesitamos usar tu cámara"
+        }
+      ],
+      "expo-web-browser"
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8e4d4d9c-e842-4bf2-ad6c-edf2a806dda6"
+      }
     }
   }
 }
