@@ -1,111 +1,66 @@
-import { router } from "expo-router";
-import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useState } from "react";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../src/theme/colors";
 
 export default function CedulaScreen() {
-  const [openInfo, setOpenInfo] = useState(false);
-  const [showTips, setShowTips] = useState(false);
+  const [frontImage, setFrontImage] = useState<string | null>(null);
+  const [backImage, setBackImage] = useState<string | null>(null);
+
+  const pickImage = async (fromCamera: boolean, isFront: boolean) => {
+    const permission = fromCamera
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) return;
+
+    const result = fromCamera
+      ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
+      : await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      isFront ? setFrontImage(uri) : setBackImage(uri);
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.back}>←</Text>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.body}>
+        {/* FRENTE */}
+        <Pressable
+          style={styles.photoBox}
+          onPress={() => pickImage(true, true)}
+        >
+          {frontImage ? (
+            <Image source={{ uri: frontImage }} style={styles.imagePreview} />
+          ) : (
+            <Text style={styles.camera}>📷 Frente</Text>
+          )}
         </Pressable>
 
-        <Text style={styles.title}>Mi cédula</Text>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.body}>
-        {/* FOTO FRENTE */}
-        <View style={styles.containerRelative}>
-          <View style={styles.labelRow}>
-            <Text style={styles.label}>Foto del frente de la cédula</Text>
-
-            <Pressable onPress={() => setShowTips(!showTips)}>
-              <Text style={styles.infoIcon}>ⓘ</Text>
-            </Pressable>
-          </View>
-
-          {showTips && (
-            <View style={styles.tooltipFloating}>
-              <Text style={styles.tooltipTitle}>
-                📄 Consejos para una buena foto:
-              </Text>
-
-              <Text style={styles.tooltipText}>
-                • Asegúrate de tener buena iluminación
-              </Text>
-              <Text style={styles.tooltipText}>
-                • Mantén la cédula plana y sin reflejos
-              </Text>
-              <Text style={styles.tooltipText}>
-                • Centra la cédula en el encuadre
-              </Text>
-              <Text style={styles.tooltipText}>
-                • Verifica que todos los datos sean legibles
-              </Text>
-            </View>
-          )}
-
-          <Pressable style={styles.photoBox}>
-            <Text style={styles.camera}>📷</Text>
-            <Text style={styles.photoTitle}>Tomar foto del frente</Text>
-            <Text style={styles.photoSub}>Lado con tu foto</Text>
-          </Pressable>
-        </View>
-
-        {/* FOTO REVERSO */}
-        <View>
-          <Text style={styles.label}>Foto del reverso de la cédula</Text>
-
-          <Pressable style={styles.photoBox}>
-            <Text style={styles.camera}>📷</Text>
-            <Text style={styles.photoTitle}>Tomar foto del reverso</Text>
-            <Text style={styles.photoSub}>Lado posterior</Text>
-          </Pressable>
-        </View>
-
-        {/* INFO DESPLEGABLE */}
+        {/* REVERSO */}
         <Pressable
-          style={styles.infoBox}
-          onPress={() => setOpenInfo(!openInfo)}
+          style={styles.photoBox}
+          onPress={() => pickImage(false, false)}
         >
-          <View style={styles.infoHeader}>
-            <Text style={styles.infoTitle}>💡 Información</Text>
-            <Text style={styles.chevron}>{openInfo ? "▲" : "▼"}</Text>
-          </View>
-
-          {openInfo && (
-            <Text style={styles.infoText}>
-              Guarda fotos claras de ambos lados de tu cédula para tenerla
-              siempre disponible digitalmente. Asegúrate de que toda la
-              información sea legible.
-            </Text>
+          {backImage ? (
+            <Image source={{ uri: backImage }} style={styles.imagePreview} />
+          ) : (
+            <Text style={styles.camera}>📷 Reverso</Text>
           )}
         </Pressable>
       </ScrollView>
-
-      {/* FOOTER */}
-      <View style={styles.footer}>
-        <Pressable style={styles.save}>
-          <Text style={styles.saveTxt}>Guardar cédula</Text>
-        </Pressable>
-
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => router.push("/perfil")}
-        >
-          <Text style={styles.backBtnTxt}>Volver al perfil</Text>
-        </Pressable>
-      </View>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
 
@@ -295,7 +250,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     flexShrink: 1, // 🔥 evita que se expanda raro
   },
-
+imagePreview: {
+  width: "100%",
+  height: "100%",
+  borderRadius: 14,
+},
   tooltipInline: {
     marginTop: 8,
     alignSelf: "flex-start", // 🔥 clave (no centrado)

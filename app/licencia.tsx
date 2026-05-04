@@ -1,14 +1,16 @@
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateInput from "../components/DateInput";
 import { colors } from "../src/theme/colors";
 
 export default function LicenciaScreen() {
@@ -20,16 +22,41 @@ export default function LicenciaScreen() {
   const [fecha, setFecha] = useState("");
   const [openDropdown, setOpenDropdown] = useState(false);
 
+  const [frontImage, setFrontImage] = useState<string | null>(null);
+  const [backImage, setBackImage] = useState<string | null>(null);
+
   const categorias = ["A1", "A2", "B1", "B2", "B3", "C1", "C2", "C3"];
+
+  const pickImage = async (fromCamera: boolean, isFront: boolean) => {
+    try {
+      const permission = fromCamera
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        alert("Permiso requerido");
+        return;
+      }
+
+      const result = fromCamera
+        ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
+        : await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
+
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        isFront ? setFrontImage(uri) : setBackImage(uri);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      {/* HEADER */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
           <Text style={styles.back}>←</Text>
         </Pressable>
-
         <Text style={styles.title}>Mi Licencia de conducción</Text>
       </View>
 
@@ -38,37 +65,23 @@ export default function LicenciaScreen() {
         <View style={styles.containerRelative}>
           <View style={styles.labelRow}>
             <Text style={styles.label}>Foto del frente de la licencia</Text>
-
             <Pressable onPress={() => setShowTips(!showTips)}>
               <Text style={styles.infoIcon}>ⓘ</Text>
             </Pressable>
           </View>
 
-          {showTips && (
-            <View style={styles.tooltipFloating}>
-              <Text style={styles.tooltipTitle}>
-                📄 Consejos para una buena foto:
-              </Text>
-
-              <Text style={styles.tooltipText}>
-                • Asegúrate de tener buena iluminación
-              </Text>
-              <Text style={styles.tooltipText}>
-                • Mantén la cédula plana y sin reflejos
-              </Text>
-              <Text style={styles.tooltipText}>
-                • Centra la cédula en el encuadre
-              </Text>
-              <Text style={styles.tooltipText}>
-                • Verifica que todos los datos sean legibles
-              </Text>
-            </View>
-          )}
-
-          <Pressable style={styles.photoBox}>
-            <Text style={styles.camera}>📷</Text>
-            <Text style={styles.photoTitle}>Tomar foto del frente</Text>
-            <Text style={styles.photoSub}>Lado con tu foto</Text>
+          <Pressable
+            style={styles.photoBox}
+            onPress={() => pickImage(true, true)}
+          >
+            {frontImage ? (
+              <Image source={{ uri: frontImage }} style={styles.imagePreview} />
+            ) : (
+              <>
+                <Text style={styles.camera}>📷</Text>
+                <Text style={styles.photoTitle}>Tomar foto del frente</Text>
+              </>
+            )}
           </Pressable>
         </View>
 
@@ -76,169 +89,72 @@ export default function LicenciaScreen() {
         <View>
           <Text style={styles.label}>Foto del reverso de la licencia</Text>
 
-          <Pressable style={styles.photoBox}>
-            <Text style={styles.camera}>📷</Text>
-            <Text style={styles.photoTitle}>Tomar foto del reverso</Text>
-            <Text style={styles.photoSub}>Lado posterior</Text>
+          <Pressable
+            style={styles.photoBox}
+            onPress={() => pickImage(false, false)}
+          >
+            {backImage ? (
+              <Image source={{ uri: backImage }} style={styles.imagePreview} />
+            ) : (
+              <>
+                <Text style={styles.camera}>📷</Text>
+                <Text style={styles.photoTitle}>Seleccionar imagen</Text>
+              </>
+            )}
           </Pressable>
         </View>
 
-        {/* INFO DESPLEGABLE */}
-        <Pressable
-          style={styles.infoBox}
-          onPress={() => setOpenInfo(!openInfo)}
-        >
-          <View style={styles.infoHeader}>
-            <Text style={styles.infoTitle}>🚗 Información</Text>
-            <Text style={styles.chevron}>{openInfo ? "▲" : "▼"}</Text>
-          </View>
-
-          {openInfo && (
-            <Text style={styles.infoText}>
-              Registra todas tus categorías (si tienes varias) con sus
-              respectivas fechas de vencimiento. Cada categoría puede tener una
-              fecha diferente.
-            </Text>
-          )}
-        </Pressable>
-
-        {/* CATEGORÍAS LICENCIA */}
-        <View style={styles.categoriesHeader}>
-          <Text style={styles.categoriesTitle}>Mis categorías de licencia</Text>
-
-          <Text style={styles.categoriesCount}>0 categorías</Text>
-        </View>
-
-        <View style={styles.emptyCategories}>
-          <View style={styles.emptyIcon}>
-            <Text style={{ fontSize: 22 }}>🪪</Text>
-          </View>
-
-          <Text style={styles.emptyTitle}>No hay categorías registradas</Text>
-
-          <Text style={styles.emptySub}>
-            Añade las categorías de tu licencia de conducción para llevar un
-            control completo de sus fechas de vencimiento
-          </Text>
-        </View>
-
-        <Pressable
-          style={styles.addCategory}
-          onPress={() => setShowModal(true)}
-        >
+        <Pressable style={styles.addCategory} onPress={() => setShowModal(true)}>
           <Text style={styles.addCategoryTitle}>＋ Añadir categoría</Text>
-          <Text style={styles.addCategorySub}>
-            Registra las categorías de tu licencia
-          </Text>
         </Pressable>
       </ScrollView>
 
-      {/* FOOTER */}
-      <View style={styles.footer}>
-        <Pressable style={styles.save}>
-          <Text style={styles.saveTxt}>Guardar Licencia</Text>
-        </Pressable>
-
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => router.push("/perfil")}
-        >
-          <Text style={styles.backBtnTxt}>Volver al perfil</Text>
-        </Pressable>
-      </View>
-
+      {/* MODAL */}
       {showModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
-            {/* HEADER */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Añadir categoría</Text>
-
-              <Pressable onPress={() => setShowModal(false)}>
-                <Text style={styles.close}>✕</Text>
-              </Pressable>
-            </View>
-
-            <Text style={styles.modalSub}>
-              Registra las categorías de tu licencia de conducción
-            </Text>
-
-            {/* CATEGORÍA */}
             <Text style={styles.label}>Categoría</Text>
 
-            <View style={styles.dropdownContainer}>
-              <Pressable
-                style={styles.input}
-                onPress={() => setOpenDropdown(!openDropdown)}
-              >
-                <Text
-                  style={{
-                    color: categoria ? colors.white : "rgba(255,255,255,0.35)",
+            <Pressable
+              style={styles.input}
+              onPress={() => setOpenDropdown(!openDropdown)}
+            >
+              <Text style={{ color: colors.white }}>
+                {categoria || "Seleccionar"}
+              </Text>
+            </Pressable>
+
+            {openDropdown &&
+              categorias.map((cat) => (
+                <Pressable
+                  key={cat}
+                  onPress={() => {
+                    setCategoria(cat);
+                    setOpenDropdown(false);
                   }}
                 >
-                  {categoria || "Selecciona una categoría"}
-                </Text>
-              </Pressable>
+                  <Text style={{ color: colors.white }}>{cat}</Text>
+                </Pressable>
+              ))}
 
-              {openDropdown && (
-                <View style={styles.dropdownOverlay}>
-                  {categorias.map((cat) => (
-                    <Pressable
-                      key={cat}
-                      style={styles.dropdownItem}
-                      onPress={() => {
-                        setCategoria(cat);
-                        setOpenDropdown(false);
-                      }}
-                    >
-                      <Text style={styles.dropdownItemTxt}>{cat}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            {/* FECHA */}
             <Text style={styles.label}>Fecha de vencimiento</Text>
 
-            <TextInput
-              style={[styles.input, { color: colors.white }]}
-              placeholder="dd/mm/aaaa"
-              placeholderTextColor="rgba(255,255,255,0.35)"
+            <DateInput
+              label=""
               value={fecha}
-              onChangeText={setFecha}
+              onChange={setFecha}
+              allowPastDates={false}
             />
 
-            {/* BOTONES */}
-            <View style={styles.modalActions}>
-              <Pressable
-                style={styles.cancelBtn}
-                onPress={() => setShowModal(false)}
-              >
-                <Text style={styles.cancelTxt}>Cancelar</Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.addBtnModal,
-                  { opacity: categoria && fecha ? 1 : 0.4 },
-                ]}
-                disabled={!categoria || !fecha}
-              >
-                <Text style={styles.addBtnTxt}>＋ Añadir</Text>
-              </Pressable>
-            </View>
-
-            <Text style={styles.modalTip}>
-              💡 Puedes añadir tantas categorías como tengas en tu licencia
-            </Text>
+            <Pressable onPress={() => setShowModal(false)}>
+              <Text style={{ color: "white" }}>Cerrar</Text>
+            </Pressable>
           </View>
         </View>
       )}
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
 
@@ -643,7 +559,11 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     fontStyle: "italic",
   },
-
+imagePreview: {
+  width: "100%",
+  height: "100%",
+  borderRadius: 14,
+},
   addCategorySub: {
     color: "rgba(255,255,255,0.5)",
     fontStyle: "italic",

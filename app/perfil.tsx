@@ -1,175 +1,57 @@
-import { Session } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
-import { supabase } from "../src/lib/supabase";
-import { colors } from "../src/theme/colors";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 export default function Perfil() {
   const [name, setName] = useState("");
-  const [session, setSession] = useState<Session | null>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   useEffect(() => {
-    checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      },
-    );
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    getProfile();
   }, []);
 
-  async function checkSession() {
-    const { data } = await supabase.auth.getSession();
-    setSession(data.session);
-
-    if (data.session) {
-      getProfile();
-    }
-  }
-
-  // 🔐 REGISTRO
-  async function signUp() {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Usuario creado ✅");
-    }
-  }
-
-  // 🔑 LOGIN
-  async function signIn() {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Bienvenido 🔥");
-      getProfile();
-    }
-  }
-
-  // 🚪 LOGOUT
-  async function signOut() {
-    await supabase.auth.signOut();
-    setSession(null);
-  }
-
-  // 📥 OBTENER PERFIL
+  // 📥 OBTENER PERFIL (LOCAL)
   async function getProfile() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("name")
-      .eq("id", user.id)
-      .single();
-
-    if (error && error.code === "PGRST116") {
-      await supabase.from("profiles").insert({
-        id: user.id,
-        name: "",
-      });
-    }
-
-    if (data) {
-      setName(data.name);
+    try {
+      const savedName = await AsyncStorage.getItem("user_name");
+      if (savedName) {
+        setName(savedName);
+      }
+    } catch (error) {
+      console.log("Error cargando perfil:", error);
     }
   }
 
-  // 💾 GUARDAR PERFIL
+  // 💾 GUARDAR PERFIL (LOCAL)
   async function saveProfile() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      alert("No hay usuario autenticado");
-      return;
-    }
-
-    const { error } = await supabase.from("profiles").upsert({
-      id: user.id,
-      name: name,
-    });
-
-    if (error) {
+    try {
+      await AsyncStorage.setItem("user_name", name);
+      alert("Perfil guardado ✅");
+    } catch (error) {
       console.log("Error guardando:", error);
       alert("Error al guardar ❌");
-    } else {
-      alert("Perfil guardado ✅");
     }
   }
 
-  // 🔴 SI NO HAY SESIÓN → LOGIN
-  if (!session) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.body}>
-          <Text style={styles.title}>Bienvenido</Text>
-
-          <TextInput
-            placeholder="Correo"
-            placeholderTextColor="gray"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-          />
-
-          <TextInput
-            placeholder="Contraseña"
-            placeholderTextColor="gray"
-            style={styles.input}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-
-          <Pressable style={styles.homeBtn} onPress={signIn}>
-            <Text style={styles.homeTxt}>🔑 Iniciar sesión</Text>
-          </Pressable>
-
-          <Pressable style={styles.homeBtn} onPress={signUp}>
-            <Text style={styles.homeTxt}>🆕 Crear cuenta</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.homeBtn}
-            onPress={() => router.replace("/home")}
-          >
-            <Text style={styles.homeTxt}>🏠 Volver a inicio</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
+  // 🚪 "LOGOUT" LOCAL (opcional)
+  async function signOut() {
+    try {
+      await AsyncStorage.removeItem("user_name");
+      setName("");
+      alert("Sesión local cerrada");
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  // 🟢 SI HAY SESIÓN → PERFIL
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.body}>
@@ -198,16 +80,18 @@ export default function Perfil() {
           style={styles.input}
         />
 
-        <Text style={styles.help}>Personaliza tu experiencia con CarApp</Text>
+        <Text style={styles.help}>
+          Personaliza tu experiencia con CarApp
+        </Text>
 
         {/* GUARDAR */}
         <Pressable style={styles.homeBtn} onPress={saveProfile}>
           <Text style={styles.homeTxt}>💾 Guardar perfil</Text>
         </Pressable>
 
-        {/* LOGOUT */}
+        {/* LOGOUT LOCAL */}
         <Pressable style={styles.homeBtn} onPress={signOut}>
-          <Text style={styles.homeTxt}>🚪 Cerrar sesión</Text>
+          <Text style={styles.homeTxt}>🚪 Limpiar datos</Text>
         </Pressable>
 
         {/* DOCUMENTOS */}
@@ -225,7 +109,9 @@ export default function Perfil() {
             onPress={() => router.push("/licencia")}
           >
             <Text style={styles.icon}>🟩</Text>
-            <Text style={styles.cardTitle}>Licencia de conducción</Text>
+            <Text style={styles.cardTitle}>
+              Licencia de conducción
+            </Text>
             <Text style={styles.cardSub}>Añadir información</Text>
           </Pressable>
         </View>
@@ -288,9 +174,11 @@ export default function Perfil() {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: {
+    flex: 1,
+    backgroundColor: "#0f172a", // puedes cambiarlo por tu theme
+  },
 
   body: {
     padding: 18,
@@ -303,20 +191,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 
-  inviteRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
   back: {
-    color: colors.white,
+    color: "white",
     fontSize: 22,
     fontWeight: "900",
   },
 
   title: {
-    color: colors.white,
+    color: "white",
     fontSize: 22,
     fontWeight: "900",
     fontStyle: "italic",
@@ -326,23 +208,23 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.card2,
+    backgroundColor: "#1e293b",
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
   },
 
   label: {
-    color: colors.white,
+    color: "white",
     fontWeight: "900",
   },
 
   input: {
     height: 48,
     borderRadius: 10,
-    backgroundColor: colors.card2,
+    backgroundColor: "#1e293b",
     paddingHorizontal: 12,
-    color: colors.white,
+    color: "white",
   },
 
   help: {
@@ -352,7 +234,7 @@ const styles = StyleSheet.create({
 
   section: {
     marginTop: 10,
-    color: colors.white,
+    color: "white",
     fontWeight: "900",
   },
 
@@ -363,7 +245,7 @@ const styles = StyleSheet.create({
 
   card: {
     flex: 1,
-    backgroundColor: colors.card2,
+    backgroundColor: "#1e293b",
     padding: 16,
     borderRadius: 14,
     alignItems: "center",
@@ -374,7 +256,7 @@ const styles = StyleSheet.create({
   },
 
   cardTitle: {
-    color: colors.white,
+    color: "white",
     fontWeight: "900",
   },
 
@@ -407,14 +289,20 @@ const styles = StyleSheet.create({
   },
 
   inviteCard: {
-    backgroundColor: colors.card2,
+    backgroundColor: "#1e293b",
     padding: 16,
     borderRadius: 14,
     gap: 12,
   },
 
+  inviteRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
   inviteTitle: {
-    color: colors.white,
+    color: "white",
     fontWeight: "900",
   },
 
@@ -448,14 +336,14 @@ const styles = StyleSheet.create({
   },
 
   about: {
-    backgroundColor: colors.card2,
+    backgroundColor: "#1e293b",
     borderRadius: 14,
     padding: 16,
     gap: 6,
   },
 
   aboutTitle: {
-    color: colors.white,
+    color: "white",
     fontWeight: "900",
   },
 
