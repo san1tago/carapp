@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import {
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,11 +25,12 @@ function formatDateLong(dateStr: string): string {
 
 export default function VehicleDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getVehicle, updateVehicle } = useVehicles();
+  const { getVehicle, updateVehicle, deleteVehicle } = useVehicles();
   const v = getVehicle(String(id));
   if (!v) return null;
 
   const [photo, setPhoto] = useState<string | null>(v.photoUri ?? null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // ── SOAT ─────────────────────────────────────────────────────────────────
   const soatExpiryDate = v.soat?.expiryDate;
@@ -75,6 +77,12 @@ export default function VehicleDetail() {
     router.replace("/home");
   };
 
+  const handleDelete = () => {
+    deleteVehicle(String(id));
+    setShowDeleteModal(false);
+    router.replace("/home");
+  };
+
   const getKitColor = () => {
     if (kitTotal === 0) return "#ff4d4f";
     if (kitTotal === 8) return "#22c55e";
@@ -89,11 +97,16 @@ export default function VehicleDetail() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      {/* HEADER */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.back}>
           <Text style={styles.backTxt}>←</Text>
         </Pressable>
         <Text style={styles.title}>{name?.trim() ? name : "Nuevo vehículo"}</Text>
+        {/* 🗑 Caneca roja */}
+        <Pressable style={styles.deleteIconBtn} onPress={() => setShowDeleteModal(true)}>
+          <Text style={styles.deleteIconTxt}>🗑</Text>
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -224,7 +237,6 @@ export default function VehicleDetail() {
         <Text style={styles.sectionLabel}>Solo en vehículos de servicio público:</Text>
 
         <View style={styles.row}>
-          {/* TARJETA OPERACIÓN */}
           <Pressable
             style={[styles.smallCard, { flex: 1 }]}
             onPress={() => router.push({ pathname: "/vehicle/[id]/tarjeta-operacion", params: { id: String(v.id) } })}
@@ -245,7 +257,6 @@ export default function VehicleDetail() {
             )}
           </Pressable>
 
-          {/* EXTRACTO CONTRATO */}
           <Pressable
             style={[styles.smallCard, { flex: 1 }]}
             onPress={() => router.push({ pathname: "/vehicle/[id]/extracto-contrato", params: { id: String(v.id) } })}
@@ -268,21 +279,51 @@ export default function VehicleDetail() {
         </View>
       </ScrollView>
 
+      {/* FOOTER */}
       <View style={styles.footer}>
         <Pressable onPress={save} disabled={!canSave} style={[styles.save, { opacity: canSave ? 1 : 0.35 }]}>
           <Text style={styles.saveTxt}>Guardar cambios</Text>
         </Pressable>
       </View>
+
+      {/* MODAL ELIMINAR */}
+      <Modal visible={showDeleteModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modal}>
+            <Pressable style={styles.modalClose} onPress={() => setShowDeleteModal(false)}>
+              <Text style={styles.modalCloseTxt}>✕</Text>
+            </Pressable>
+
+            <Text style={styles.modalTitle}>¿Eliminar vehículo?</Text>
+            <Text style={styles.modalBody}>
+              ¿Estás seguro de que deseas eliminar{" "}
+              <Text style={{ fontWeight: "900" }}>"{name || "este vehículo"}"</Text>?
+              {"\n"}Esta acción no se puede deshacer y se eliminarán todos los documentos asociados.
+            </Text>
+
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalCancel} onPress={() => setShowDeleteModal(false)}>
+                <Text style={styles.modalCancelTxt}>Cancelar</Text>
+              </Pressable>
+              <Pressable style={styles.modalDelete} onPress={handleDelete}>
+                <Text style={styles.modalDeleteTxt}>Eliminar</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 10 },
-  back: { padding: 6 },
+  header: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  back: { padding: 6, width: 40 },
   backTxt: { color: colors.white, fontSize: 22, fontWeight: "900" },
-  title: { color: colors.white, fontSize: 22, fontWeight: "900", fontStyle: "italic" },
+  title: { color: colors.white, fontSize: 20, fontWeight: "900", fontStyle: "italic", flex: 1, textAlign: "center" },
+  deleteIconBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(255,77,79,0.15)", borderWidth: 1, borderColor: "rgba(255,77,79,0.4)", alignItems: "center", justifyContent: "center" },
+  deleteIconTxt: { fontSize: 18 },
   content: { paddingHorizontal: 18, paddingBottom: 24, gap: 12 },
   input: { height: 48, borderRadius: 10, backgroundColor: "transparent", borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.18)", paddingHorizontal: 4, color: colors.white, fontWeight: "800", fontStyle: "italic" },
   bigCard: { borderRadius: 18, backgroundColor: colors.card2, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", padding: 16, gap: 14 },
@@ -300,4 +341,16 @@ const styles = StyleSheet.create({
   footer: { padding: 18, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.06)" },
   save: { height: 54, borderRadius: 14, backgroundColor: colors.card2, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
   saveTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center", alignItems: "center" },
+  modal: { width: "88%", backgroundColor: "#0d1b2e", borderRadius: 20, padding: 24, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" },
+  modalClose: { position: "absolute", top: 14, right: 16 },
+  modalCloseTxt: { color: "rgba(255,255,255,0.5)", fontSize: 18 },
+  modalTitle: { color: colors.white, fontSize: 20, fontWeight: "900", fontStyle: "italic", textAlign: "center", marginBottom: 12 },
+  modalBody: { color: "rgba(255,255,255,0.7)", fontStyle: "italic", fontWeight: "800", textAlign: "center", lineHeight: 22, marginBottom: 24 },
+  modalActions: { flexDirection: "row", gap: 12 },
+  modalCancel: { flex: 1, height: 50, borderRadius: 14, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
+  modalCancelTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
+  modalDelete: { flex: 1, height: 50, borderRadius: 14, backgroundColor: "#ff4d4f", alignItems: "center", justifyContent: "center" },
+  modalDeleteTxt: { color: "#fff", fontWeight: "900", fontStyle: "italic" },
 });

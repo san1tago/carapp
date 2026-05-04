@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -22,7 +22,7 @@ type Option = {
 const OPTIONS: Option[] = [
   { type: "carro", label: "Carro", icon: "car-outline" },
   { type: "moto", label: "Moto", icon: "bicycle-outline" },
-  { type: "camion", label: "Camión", icon: "car-outline" },
+  { type: "camion", label: "Camión", icon: "bus-outline" },
   { type: "van", label: "Van", icon: "bus-outline" },
   { type: "bus", label: "Bus", icon: "bus-outline" },
   { type: "taxi", label: "Taxi", icon: "car-outline" },

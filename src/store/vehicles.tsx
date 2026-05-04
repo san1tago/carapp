@@ -10,14 +10,16 @@ import React, {
 export type VehicleType = "carro" | "moto" | "camion" | "van" | "bus" | "taxi";
 
 export type SoatData = {
-  purchaseDate?: string; // ISO
+  purchaseDate?: string;
+  expiryDate?: string;        // 🔥 nuevo
   photoUri?: string;
-  remindersDaysBefore: number[]; // ej: [7]
+  remindersDaysBefore: number[];
   notificationIds: string[];
 };
 
 export type TecnomecanicaData = {
-  reviewDate?: string; // ISO
+  reviewDate?: string;        // cuándo se hizo
+  expiryDate?: string;        // 🔥 nuevo: cuándo vence
   photoUri?: string;
   remindersDaysBefore: number[];
   notificationIds: string[];
@@ -25,6 +27,7 @@ export type TecnomecanicaData = {
 
 export type ExtintorData = {
   purchaseDate?: string;
+  expiryDate?: string;        // 🔥 nuevo
   photoUri?: string;
   remindersDaysBefore: number[];
   notificationIds: string[];
@@ -50,6 +53,7 @@ export type SeguroAdicionalData = {
 export type TarjetaOperacionData = {
   info?: string;
   expeditionDate?: string;
+  expiryDate?: string;        // 🔥 nuevo
   photoUri?: string;
   remindersDaysBefore: number[];
   notificationIds: string[];
@@ -67,7 +71,6 @@ export type Vehicle = {
   model?: string;
   plate?: string;
   photoUri?: string;
-
   soat: SoatData;
   tecnomecanica: TecnomecanicaData;
   extintor: ExtintorData;
@@ -83,6 +86,7 @@ type Ctx = {
   addVehicle: (v: Vehicle) => void;
   updateVehicle: (id: string, patch: Partial<Vehicle>) => void;
   getVehicle: (id: string) => Vehicle | undefined;
+  deleteVehicle: (id: string) => void;  // 🔥 nuevo
 };
 
 const VehiclesContext = createContext<Ctx | null>(null);
@@ -102,17 +106,17 @@ export function VehiclesProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.setItem(KEY, JSON.stringify(vehicles));
   }, [vehicles]);
 
-  const value = useMemo<Ctx>(() => {
-    return {
-      vehicles,
-      addVehicle: (v) => setVehicles((prev) => [v, ...prev]),
-      updateVehicle: (id, patch) =>
-        setVehicles((prev) =>
-          prev.map((v) => (v.id === id ? { ...v, ...patch } : v)),
-        ),
-      getVehicle: (id) => vehicles.find((v) => v.id === id),
-    };
-  }, [vehicles]);
+  const value = useMemo<Ctx>(() => ({
+    vehicles,
+    addVehicle: (v) => setVehicles((prev) => [v, ...prev]),
+    updateVehicle: (id, patch) =>
+      setVehicles((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, ...patch } : v)),
+      ),
+    getVehicle: (id) => vehicles.find((v) => v.id === id),
+    deleteVehicle: (id) =>
+      setVehicles((prev) => prev.filter((v) => v.id !== id)),
+  }), [vehicles]);
 
   return (
     <VehiclesContext.Provider value={value}>
