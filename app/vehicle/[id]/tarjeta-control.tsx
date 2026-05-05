@@ -2,7 +2,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Notifications from "expo-notifications";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+    Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PhotoInput from "../../../components/PhotoInput";
 import { cancelNotifications, scheduleDocumentReminders } from "../../../src/notifications/reminderEngine";
@@ -42,7 +44,10 @@ function NativeDatePicker({ visible, onConfirm, onCancel }: {
   if (Platform.OS === "android") {
     return (
       <DateTimePicker value={tempDate} mode="date" display="spinner" minimumDate={new Date()}
-        onChange={(event, date) => { if (event.type === "dismissed") { onCancel(); return; } if (date) onConfirm(date); }}
+        onChange={(event, date) => {
+          if (event.type === "dismissed") { onCancel(); return; }
+          if (date) onConfirm(date);
+        }}
       />
     );
   }
@@ -51,51 +56,71 @@ function NativeDatePicker({ visible, onConfirm, onCancel }: {
       <Text style={styles.dpTitle}>📅 Fecha de vencimiento</Text>
       <DateTimePicker value={tempDate} mode="date" display="spinner" minimumDate={new Date()}
         locale="es-ES" textColor="#ffffff" themeVariant="dark"
-        onChange={(_, date) => { if (date) setTempDate(date); }} style={styles.dpPicker}
+        onChange={(_, date) => { if (date) setTempDate(date); }}
+        style={styles.dpPicker}
       />
       <View style={styles.dpActions}>
-        <Pressable style={styles.dpCancelBtn} onPress={onCancel}><Text style={styles.dpCancelTxt}>Cancelar</Text></Pressable>
-        <Pressable style={styles.dpConfirmBtn} onPress={() => onConfirm(tempDate)}><Text style={styles.dpConfirmTxt}>Confirmar ✓</Text></Pressable>
+        <Pressable style={styles.dpCancelBtn} onPress={onCancel}>
+          <Text style={styles.dpCancelTxt}>Cancelar</Text>
+        </Pressable>
+        <Pressable style={styles.dpConfirmBtn} onPress={() => onConfirm(tempDate)}>
+          <Text style={styles.dpConfirmTxt}>Confirmar ✓</Text>
+        </Pressable>
       </View>
     </View>
   );
 }
 
-export default function SoatScreen() {
+export default function TarjetaControlScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getVehicle, updateVehicle } = useVehicles();
   const v = getVehicle(String(id));
 
   const initial = useMemo(() => ({
-    expiryDate: v?.soat.expiryDate ?? "",
-    reminders: v?.soat.remindersDaysBefore ?? [],
-    notificationIds: v?.soat.notificationIds ?? [],
+    info: v?.tarjetaControl?.info ?? "",
+    expiryDate: v?.tarjetaControl?.expiryDate ?? "",
+    reminders: v?.tarjetaControl?.remindersDaysBefore ?? [],
+    notificationIds: v?.tarjetaControl?.notificationIds ?? [],
   }), [v]);
 
+  const [info, setInfo] = useState(initial.info);
   const [expiryDate, setExpiryDate] = useState(initial.expiryDate);
-  const [reminders, setReminders] = useState<number[]>(initial.reminders || []);
+  const [reminders, setReminders] = useState<number[]>(initial.reminders);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const canSave = !saving && (
+    info !== initial.info ||
     expiryDate !== initial.expiryDate ||
     JSON.stringify(reminders.slice().sort()) !== JSON.stringify(initial.reminders.slice().sort())
   );
 
   useEffect(() => {
+    setInfo(initial.info);
     setExpiryDate(initial.expiryDate);
     setReminders(initial.reminders);
-  }, [initial.expiryDate, JSON.stringify(initial.reminders)]);
+  }, [initial]);
 
   if (!v) return null;
 
+  // Redirigir si no es taxi
+  if (v.type !== "taxi") {
+    router.back();
+    return null;
+  }
+
   const addReminder = () => { if (!expiryDate) return; setReminders((prev) => [...prev, 7]); };
+
   const updateReminder = (index: number, days: number) => {
     setReminders((prev) => { const copy = [...prev]; copy[index] = days; return copy; });
     setOpenIndex(null);
   };
-  const removeReminder = (index: number) => setReminders((prev) => prev.filter((_, i) => i !== index));
+
+  const removeReminder = (index: number) => {
+    setReminders((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleDateConfirm = (date: Date) => {
     const d = String(date.getDate()).padStart(2, "0");
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -106,49 +131,78 @@ export default function SoatScreen() {
   const save = async () => {
     if (!expiryDate) return;
     setSaving(true);
-    const perm = await Notifications.getPermissionsAsync();
-    if (perm.status !== "granted") await Notifications.requestPermissionsAsync();
-    await cancelNotifications(initial.notificationIds);
-    const [day, month, year] = expiryDate.split("/").map(Number);
-    const ids = await scheduleDocumentReminders({
-      title: "🚗 SOAT por vencer",
-      body: `El SOAT de ${v.name} vence pronto`,
-      baseDate: new Date(year, month - 1, day),
-      durationDays: 0,
-      reminderDaysBefore: reminders,
-    });
-    updateVehicle(v.id, { soat: { ...v.soat, expiryDate, remindersDaysBefore: reminders, notificationIds: ids } });
-    setSaving(false);
-    router.back();
+    try {
+      const perm = await Notifications.getPermissionsAsync();
+      if (perm.status !== "granted") await Notifications.requestPermissionsAsync();
+      await cancelNotifications(initial.notificationIds);
+      const [day, month, year] = expiryDate.split("/").map(Number);
+      const expiryDateObj = new Date(year, month - 1, day);
+      if (isNaN(expiryDateObj.getTime())) { alert("Fecha inválida"); setSaving(false); return; }
+      const ids = await scheduleDocumentReminders({
+        title: "🚕 Tarjeta de control por vencer",
+        body: `La tarjeta de control de ${v.name} vence pronto`,
+        baseDate: expiryDateObj,
+        durationDays: 0,
+        reminderDaysBefore: reminders,
+      });
+      updateVehicle(v.id, {
+        tarjetaControl: { info, expiryDate, remindersDaysBefore: reminders, notificationIds: ids },
+      });
+      router.back();
+    } catch (error) {
+      console.log("Error guardando tarjeta control:", error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.back}><Text style={styles.backTxt}>←</Text></Pressable>
-        <Text style={styles.h1}>SOAT - {v.name}</Text>
+        <Pressable onPress={() => router.back()} style={styles.back}>
+          <Text style={styles.backTxt}>←</Text>
+        </Pressable>
+        <Text style={styles.h1}>Tarjeta de control - {v.name}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Fecha de vencimiento del SOAT</Text>
+
+        {/* INFO */}
+        <Text style={styles.label}>Información de la tarjeta de control</Text>
+        <TextInput
+          value={info} onChangeText={setInfo}
+          placeholder="Registra la información relevante de tu tarjeta de control"
+          placeholderTextColor="rgba(255,255,255,0.35)"
+          style={styles.input}
+          multiline
+        />
+
+        {/* FECHA VENCIMIENTO */}
+        <Text style={[styles.label, { marginTop: 16 }]}>Fecha de vencimiento de la tarjeta</Text>
         <Pressable style={styles.dateInput} onPress={() => setShowDatePicker(!showDatePicker)}>
-          {expiryDate ? <Text style={styles.expiryText}>🔴 Se vence el: {formatDateLong(expiryDate)}</Text>
+          {expiryDate
+            ? <Text style={styles.expiryText}>🔴 Se vence el: {formatDateLong(expiryDate)}</Text>
             : <Text style={styles.datePlaceholder}>Selecciona la fecha</Text>}
           <Text style={styles.calendarIcon}>📅</Text>
         </Pressable>
         <NativeDatePicker visible={showDatePicker} onConfirm={handleDateConfirm} onCancel={() => setShowDatePicker(false)} />
 
-        <Text style={[styles.label, { marginTop: 18 }]}>Foto del SOAT</Text>
-        <PhotoInput value={v.soat?.photoUri} fileName={`soat_${v.id}.jpg`}
-          onChange={(uri) => updateVehicle(v.id, { soat: { ...v.soat, photoUri: uri } })}
+        {/* FOTO */}
+        <Text style={[styles.label, { marginTop: 18 }]}>Foto de la tarjeta de control</Text>
+        <PhotoInput
+          value={v.tarjetaControl?.photoUri}
+          fileName={`tarjeta_control_${v.id}.jpg`}
+          onChange={(uri) => updateVehicle(v.id, { tarjetaControl: { ...v.tarjetaControl, photoUri: uri, remindersDaysBefore: reminders, notificationIds: initial.notificationIds } })}
         />
 
+        {/* RECORDATORIOS */}
         <View style={styles.remHeader}>
           <Text style={styles.remTitle}>🔔 Recordatorios</Text>
           <Pressable style={[styles.addBtn, { opacity: expiryDate ? 1 : 0.35 }]} onPress={addReminder} disabled={!expiryDate}>
             <Text style={styles.addBtnTxt}>+ Añadir</Text>
           </Pressable>
         </View>
+
         {!expiryDate && <Text style={styles.emptyTxt}>Ingresa la fecha de vencimiento para añadir recordatorios</Text>}
 
         <View style={styles.remList}>
@@ -165,7 +219,9 @@ export default function SoatScreen() {
                     <Text style={styles.dropdownArrow}>▼</Text>
                   </Pressable>
                   <Text style={styles.reminderText}>antes</Text>
-                  <Pressable onPress={() => removeReminder(index)}><Text style={styles.deleteTxt}>🗑</Text></Pressable>
+                  <Pressable onPress={() => removeReminder(index)}>
+                    <Text style={styles.deleteTxt}>🗑</Text>
+                  </Pressable>
                 </View>
                 {reminderDate ? <Text style={styles.reminderDateTxt}>📩 Se enviará el {reminderDate}</Text> : null}
                 {openIndex === index && (
@@ -182,11 +238,18 @@ export default function SoatScreen() {
           })}
           {reminders.length > 0 && <Text style={styles.recommendTxt}>💡 Recomendamos configurar recordatorios múltiples para mayor seguridad</Text>}
         </View>
+
+        {/* INFO BOX */}
+        <View style={styles.infoBox}>
+          <Text style={styles.infoTxt}>
+            💡 La tarjeta de control es requerida específicamente para taxis. Es un documento individual e intransferible que identifica al conductor como autorizado para prestar el servicio de taxi. Debe ser renovado mensualmente.
+          </Text>
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <Pressable onPress={save} disabled={!canSave || !expiryDate} style={[styles.save, { opacity: canSave && expiryDate ? 1 : 0.35 }]}>
-          <Text style={styles.saveTxt}>{saving ? "Guardando..." : "Guardar SOAT"}</Text>
+          <Text style={styles.saveTxt}>{saving ? "Guardando..." : "Guardar tarjeta de control"}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -198,19 +261,21 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 10 },
   back: { padding: 6 },
   backTxt: { color: colors.white, fontSize: 22, fontWeight: "900" },
-  h1: { color: colors.white, fontSize: 22, fontWeight: "900", fontStyle: "italic" },
-  body: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 120 }, // 🔥 paddingBottom grande
+  h1: { color: colors.white, fontSize: 20, fontWeight: "900", fontStyle: "italic", flex: 1 },
+  body: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 120 },
   label: { color: colors.white, fontWeight: "900", fontStyle: "italic", marginBottom: 8 },
+  input: { minHeight: 48, borderRadius: 10, backgroundColor: colors.card2, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", paddingHorizontal: 12, paddingVertical: 12, color: colors.white, fontWeight: "800", fontStyle: "italic", marginBottom: 4 },
+  help: { color: "rgba(255,255,255,0.45)", fontSize: 12, marginTop: 6, marginBottom: 16, fontStyle: "italic" },
   dateInput: { minHeight: 54, borderRadius: 12, backgroundColor: colors.card2, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", paddingHorizontal: 14, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   datePlaceholder: { color: "rgba(255,255,255,0.35)", fontWeight: "800", fontStyle: "italic" },
-  expiryText: { color: "#ff4d4f", fontWeight: "900", fontStyle: "italic", fontSize: 15, flex: 1, flexWrap: "wrap" },
+  expiryText: { color: "#ff4d4f", fontWeight: "900", fontStyle: "italic", fontSize: 14, flex: 1, flexWrap: "wrap" },
   calendarIcon: { fontSize: 18, marginLeft: 8 },
   remHeader: { marginTop: 22, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   remTitle: { color: colors.white, fontWeight: "900", fontStyle: "italic", fontSize: 18 },
   addBtn: { borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
   addBtnTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
   emptyTxt: { color: "rgba(255,255,255,0.5)", fontStyle: "italic", marginTop: 10 },
-  remList: { marginTop: 10, gap: 10 },
+  remList: { marginTop: 10, gap: 10, zIndex: 100 },
   reminderCard: { backgroundColor: colors.card2, borderRadius: 14, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", padding: 14, position: "relative", gap: 8 },
   reminderRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   reminderText: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
@@ -223,9 +288,11 @@ const styles = StyleSheet.create({
   dropdownItem: { paddingVertical: 8, paddingHorizontal: 12 },
   dropdownItemTxt: { color: colors.white, fontWeight: "800" },
   recommendTxt: { marginTop: 10, color: "#ffc107", fontWeight: "900", fontStyle: "italic" },
+  infoBox: { marginTop: 20, borderRadius: 14, padding: 16, backgroundColor: "#0b1e3b", borderWidth: 1, borderColor: "#1e3a8a" },
+  infoTxt: { color: "#60a5fa", fontWeight: "900", fontStyle: "italic", lineHeight: 20 },
   footer: { padding: 18, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.06)" },
-  save: { height: 54, borderRadius: 999, backgroundColor: colors.white, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
-  saveTxt: { color: colors.black, fontWeight: "900", fontStyle: "italic" },
+  save: { height: 54, borderRadius: 999, backgroundColor: colors.white, alignItems: "center", justifyContent: "center" },
+  saveTxt: { color: colors.black, fontWeight: "900", fontStyle: "italic", fontSize: 16 },
   dpContainer: { backgroundColor: "#0b1e3b", borderRadius: 14, borderWidth: 1, borderColor: "#1e3a8a", paddingHorizontal: 14, paddingTop: 14, paddingBottom: 6, marginTop: 10, marginBottom: 4 },
   dpTitle: { color: "#60a5fa", fontWeight: "900", fontStyle: "italic", marginBottom: 4, textAlign: "center" },
   dpPicker: { width: "100%", height: 180 },

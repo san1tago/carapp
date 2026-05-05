@@ -35,49 +35,27 @@ function getReminderDate(expiryDateStr: string, daysBefore: number): string {
 }
 
 function NativeDatePicker({ visible, onConfirm, onCancel }: {
-  visible: boolean;
-  onConfirm: (date: Date) => void;
-  onCancel: () => void;
+  visible: boolean; onConfirm: (date: Date) => void; onCancel: () => void;
 }) {
   const [tempDate, setTempDate] = useState(new Date());
   if (!visible) return null;
-
   if (Platform.OS === "android") {
     return (
-      <DateTimePicker
-        value={tempDate}
-        mode="date"
-        display="spinner"
-        minimumDate={new Date()}
-        onChange={(event, date) => {
-          if (event.type === "dismissed") { onCancel(); return; }
-          if (date) onConfirm(date);
-        }}
+      <DateTimePicker value={tempDate} mode="date" display="spinner" minimumDate={new Date()}
+        onChange={(event, date) => { if (event.type === "dismissed") { onCancel(); return; } if (date) onConfirm(date); }}
       />
     );
   }
-
   return (
     <View style={styles.dpContainer}>
       <Text style={styles.dpTitle}>📅 Fecha de vencimiento</Text>
-      <DateTimePicker
-        value={tempDate}
-        mode="date"
-        display="spinner"
-        minimumDate={new Date()}
-        locale="es-ES"
-        textColor="#ffffff"
-        themeVariant="dark"
-        onChange={(_, date) => { if (date) setTempDate(date); }}
-        style={styles.dpPicker}
+      <DateTimePicker value={tempDate} mode="date" display="spinner" minimumDate={new Date()}
+        locale="es-ES" textColor="#ffffff" themeVariant="dark"
+        onChange={(_, date) => { if (date) setTempDate(date); }} style={styles.dpPicker}
       />
       <View style={styles.dpActions}>
-        <Pressable style={styles.dpCancelBtn} onPress={onCancel}>
-          <Text style={styles.dpCancelTxt}>Cancelar</Text>
-        </Pressable>
-        <Pressable style={styles.dpConfirmBtn} onPress={() => onConfirm(tempDate)}>
-          <Text style={styles.dpConfirmTxt}>Confirmar ✓</Text>
-        </Pressable>
+        <Pressable style={styles.dpCancelBtn} onPress={onCancel}><Text style={styles.dpCancelTxt}>Cancelar</Text></Pressable>
+        <Pressable style={styles.dpConfirmBtn} onPress={() => onConfirm(tempDate)}><Text style={styles.dpConfirmTxt}>Confirmar ✓</Text></Pressable>
       </View>
     </View>
   );
@@ -113,16 +91,11 @@ export default function ExtintorScreen() {
   if (!v) return null;
 
   const addReminder = () => { if (!expiryDate) return; setReminders((prev) => [...prev, 7]); };
-
   const updateReminder = (index: number, days: number) => {
     setReminders((prev) => { const copy = [...prev]; copy[index] = days; return copy; });
     setOpenIndex(null);
   };
-
-  const removeReminder = (index: number) => {
-    setReminders((prev) => prev.filter((_, i) => i !== index));
-  };
-
+  const removeReminder = (index: number) => setReminders((prev) => prev.filter((_, i) => i !== index));
   const handleDateConfirm = (date: Date) => {
     const d = String(date.getDate()).padStart(2, "0");
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -133,32 +106,18 @@ export default function ExtintorScreen() {
   const save = async () => {
     if (!expiryDate) return;
     setSaving(true);
-
     const perm = await Notifications.getPermissionsAsync();
     if (perm.status !== "granted") await Notifications.requestPermissionsAsync();
-
     await cancelNotifications(initial.notificationIds);
-
     const [day, month, year] = expiryDate.split("/").map(Number);
-    const expiryDateObj = new Date(year, month - 1, day);
-
     const ids = await scheduleDocumentReminders({
       title: "🧯 Extintor por vencer",
       body: `El extintor de ${v.name} vence pronto`,
-      baseDate: expiryDateObj,
+      baseDate: new Date(year, month - 1, day),
       durationDays: 0,
       reminderDaysBefore: reminders,
     });
-
-    updateVehicle(v.id, {
-      extintor: {
-        ...v.extintor,
-        expiryDate,
-        remindersDaysBefore: reminders,
-        notificationIds: ids,
-      },
-    });
-
+    updateVehicle(v.id, { extintor: { ...v.extintor, expiryDate, remindersDaysBefore: reminders, notificationIds: ids } });
     setSaving(false);
     router.back();
   };
@@ -166,50 +125,34 @@ export default function ExtintorScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.back}>
-          <Text style={styles.backTxt}>←</Text>
-        </Pressable>
+        <Pressable onPress={() => router.back()} style={styles.back}><Text style={styles.backTxt}>←</Text></Pressable>
         <Text style={styles.h1}>Extintor - {v.name}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-
-        {/* FECHA VENCIMIENTO */}
         <Text style={styles.label}>Fecha de vencimiento del extintor</Text>
         <Pressable style={styles.dateInput} onPress={() => setShowDatePicker(!showDatePicker)}>
-          {expiryDate
-            ? <Text style={styles.expiryText}>🔴 Se vence el: {formatDateLong(expiryDate)}</Text>
+          {expiryDate ? <Text style={styles.expiryText}>🔴 Se vence el: {formatDateLong(expiryDate)}</Text>
             : <Text style={styles.datePlaceholder}>Selecciona la fecha</Text>}
           <Text style={styles.calendarIcon}>📅</Text>
         </Pressable>
+        <NativeDatePicker visible={showDatePicker} onConfirm={handleDateConfirm} onCancel={() => setShowDatePicker(false)} />
 
-        <NativeDatePicker
-          visible={showDatePicker}
-          onConfirm={handleDateConfirm}
-          onCancel={() => setShowDatePicker(false)}
-        />
-
-        {/* FOTO */}
         <Text style={[styles.label, { marginTop: 18 }]}>Foto del extintor</Text>
-        <PhotoInput
-          value={v.extintor?.photoUri}
-          fileName={`extintor_${v.id}.jpg`}
+        <PhotoInput value={v.extintor?.photoUri} fileName={`extintor_${v.id}.jpg`}
           onChange={(uri) => updateVehicle(v.id, { extintor: { ...v.extintor, photoUri: uri } })}
         />
 
-        {/* RECORDATORIOS */}
         <View style={styles.remHeader}>
           <Text style={styles.remTitle}>🔔 Recordatorios</Text>
           <Pressable style={[styles.addBtn, { opacity: expiryDate ? 1 : 0.35 }]} onPress={addReminder} disabled={!expiryDate}>
             <Text style={styles.addBtnTxt}>+ Añadir</Text>
           </Pressable>
         </View>
-
         {!expiryDate && <Text style={styles.emptyTxt}>Ingresa la fecha de vencimiento para añadir recordatorios</Text>}
 
         <View style={styles.remList}>
           {expiryDate && reminders.length === 0 && <Text style={styles.emptyTxt}>No hay recordatorios configurados</Text>}
-
           {reminders.map((days, index) => {
             const selected = reminderOptions.find((o) => o.days === days)?.label || "";
             const reminderDate = getReminderDate(expiryDate, days);
@@ -222,9 +165,7 @@ export default function ExtintorScreen() {
                     <Text style={styles.dropdownArrow}>▼</Text>
                   </Pressable>
                   <Text style={styles.reminderText}>antes</Text>
-                  <Pressable onPress={() => removeReminder(index)}>
-                    <Text style={styles.deleteTxt}>🗑</Text>
-                  </Pressable>
+                  <Pressable onPress={() => removeReminder(index)}><Text style={styles.deleteTxt}>🗑</Text></Pressable>
                 </View>
                 {reminderDate ? <Text style={styles.reminderDateTxt}>📩 Se enviará el {reminderDate}</Text> : null}
                 {openIndex === index && (
@@ -258,7 +199,7 @@ const styles = StyleSheet.create({
   back: { padding: 6 },
   backTxt: { color: colors.white, fontSize: 22, fontWeight: "900" },
   h1: { color: colors.white, fontSize: 22, fontWeight: "900", fontStyle: "italic" },
-  body: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 0 },
+  body: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 120 }, // 🔥
   label: { color: colors.white, fontWeight: "900", fontStyle: "italic", marginBottom: 8 },
   dateInput: { minHeight: 54, borderRadius: 12, backgroundColor: colors.card2, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", paddingHorizontal: 14, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   datePlaceholder: { color: "rgba(255,255,255,0.35)", fontWeight: "800", fontStyle: "italic" },
@@ -283,8 +224,8 @@ const styles = StyleSheet.create({
   dropdownItemTxt: { color: colors.white, fontWeight: "800" },
   recommendTxt: { marginTop: 10, color: "#ffc107", fontWeight: "900", fontStyle: "italic" },
   footer: { padding: 18, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.06)" },
-  save: { height: 54, borderRadius: 14, backgroundColor: colors.card2, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
-  saveTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
+  save: { height: 54, borderRadius: 999, backgroundColor: colors.white, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
+  saveTxt: { color: colors.black, fontWeight: "900", fontStyle: "italic" },
   dpContainer: { backgroundColor: "#0b1e3b", borderRadius: 14, borderWidth: 1, borderColor: "#1e3a8a", paddingHorizontal: 14, paddingTop: 14, paddingBottom: 6, marginTop: 10, marginBottom: 4 },
   dpTitle: { color: "#60a5fa", fontWeight: "900", fontStyle: "italic", marginBottom: 4, textAlign: "center" },
   dpPicker: { width: "100%", height: 180 },

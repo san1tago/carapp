@@ -60,7 +60,9 @@ export default function VehicleDetail() {
   const seguroActivo = !!v.seguroAdicional?.type;
   const tarjetaActiva = !!v.tarjetaOperacion?.expiryDate;
   const extractoActivo = !!v.extractoContrato?.info;
-
+  // ── Es taxi ───────────────────────────────────────────────────────────────
+  const esTaxi = v.type === "taxi";
+  const tarjetaControlActiva = !!v.tarjetaControl?.expiryDate;
   const initial = useMemo(
     () => ({ name: v.name ?? "", model: v.model ?? "", plate: v.plate ?? "" }),
     [v.id],
@@ -277,6 +279,27 @@ export default function VehicleDetail() {
             )}
           </Pressable>
         </View>
+        {esTaxi && (
+  <Pressable
+    style={styles.bigCard}
+    onPress={() => router.push({ pathname: "/vehicle/[id]/", params: { id: String(v.id) } })}
+  >
+    <Text style={styles.cardTitle}>Tarjeta de control</Text>
+    {tarjetaControlActiva ? (
+      <>
+        <Text style={styles.activeTxt}>✓ Tarjeta vigente</Text>
+        <Text style={styles.expiryTxt}>🔴 Se vence el: {formatDateLong(v.tarjetaControl?.expiryDate ?? "")}</Text>
+      </>
+    ) : (
+      <>
+        <Text style={styles.optionalSmall}>Solo para taxis</Text>
+        <View style={styles.cardBtn}>
+          <Text style={styles.cardBtnTxt}>Añadir tarjeta de control</Text>
+        </View>
+      </>
+    )}
+  </Pressable>
+)}
       </ScrollView>
 
       {/* FOOTER */}
@@ -339,8 +362,8 @@ const styles = StyleSheet.create({
   cardBtn: { height: 44, borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", alignItems: "center", justifyContent: "center" },
   cardBtnTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
   footer: { padding: 18, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.06)" },
-  save: { height: 54, borderRadius: 14, backgroundColor: colors.card2, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
-  saveTxt: { color: colors.white, fontWeight: "900", fontStyle: "italic" },
+  save: { height: 54, borderRadius: 999, backgroundColor: colors.white, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
+  saveTxt: { color: colors.black, fontWeight: "900", fontStyle: "italic" },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center", alignItems: "center" },
   modal: { width: "88%", backgroundColor: "#0d1b2e", borderRadius: 20, padding: 24, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" },

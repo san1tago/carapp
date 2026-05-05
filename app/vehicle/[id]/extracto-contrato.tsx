@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PhotoInput from "../../../components/PhotoInput";
 
 import {
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   save: {
     height: 54,
     borderRadius: 14,
-    backgroundColor: colors.card2,
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
     alignItems: "center",
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
 
   saveTxt: {
-    color: colors.white,
+    color: colors.black,
     fontWeight: "900",
     fontStyle: "italic",
   },

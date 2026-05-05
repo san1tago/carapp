@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { PaywallCard } from "../src/components/PaywallCard";
 import { PrimaryButton } from "../src/components/PrimaryButton";
@@ -48,7 +48,7 @@ const canContinue = selected !== null;
         </View>
 
         <Text style={styles.foot}>
-          Tu pequeño aporte nos ayuda a seguir combatiendo las multas{"\n"}injustas
+          Tu pequeño aporte nos ayuda a seguir evitando multas{"\n"}
         </Text>
 
         <View style={{ height: 14 }} />

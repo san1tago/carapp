@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { SelectCard } from "../src/components/SelectCard";
 import { colors } from "../src/theme/colors";
@@ -13,8 +13,8 @@ export default function Question() {
         h1: "Cuéntanos más sobre ti",
         h2: "¿Por qué quieres usar nuestra app?",
         options: [
-          "Se me olvida pagar el SOAT",
-          "Se me olvida pagar la revisión tecnicomecanica",
+          "Se me olvida renovar el SOAT",
+          "Se me olvida renovar la revisión tecnicomecanica",
           "No quiero pagar multas por documentos vencidos",
           "Quiero recordar cuando renovar documentos",
         ],

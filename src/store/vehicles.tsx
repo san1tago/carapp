@@ -58,7 +58,15 @@ export type TarjetaOperacionData = {
   remindersDaysBefore: number[];
   notificationIds: string[];
 };
+export type TarjetaControlData = {
+  info?: string;
+  expiryDate?: string;
+  photoUri?: string;
+  remindersDaysBefore: number[];
+  notificationIds: string[];
+};
 
+// En Vehicle, agregar:
 export type ExtractoContratoData = {
   info?: string;
   photoUri?: string;
@@ -79,6 +87,7 @@ export type Vehicle = {
   seguroAdicional: SeguroAdicionalData;
   tarjetaOperacion: TarjetaOperacionData;
   extractoContrato: ExtractoContratoData;
+  tarjetaControl?: TarjetaControlData; // 🔥 opcional, solo taxis
 };
 
 type Ctx = {
