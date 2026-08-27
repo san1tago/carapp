@@ -1,50 +1,128 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import Purchases, { PurchasesPackage } from "react-native-purchases";
 import { PaywallCard } from "../src/components/PaywallCard";
 import { PrimaryButton } from "../src/components/PrimaryButton";
+import { useOfferings } from "../src/hooks/useOfferings";
 import { colors } from "../src/theme/colors";
 
 export default function Paywall() {
-  const [selected, setSelected] = useState<"trial" | "monthly" | "annual" | null>(null);
-const canContinue = selected !== null;
+  const { packages, loading, error } = useOfferings();
+  const [selected, setSelected] = useState<PurchasesPackage | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+
+  const monthly = packages.find((p) => p.packageType === "MONTHLY");
+  const annual = packages.find((p) => p.packageType === "ANNUAL");
+  const hasTrial = !!annual?.product.introPrice;
+
+  async function handleContinue() {
+    if (!selected) return;
+    setPurchasing(true);
+    try {
+      const { customerInfo } = await Purchases.purchasePackage(selected);
+      if (customerInfo.entitlements.active["premium"]) {
+        router.replace("/home");
+      }
+    } catch (e: any) {
+      if (!e.userCancelled) {
+        console.log("Purchase error", e);
+      }
+    } finally {
+      setPurchasing(false);
+    }
+  }
+
+  async function handleRestore() {
+    setRestoring(true);
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+      if (customerInfo.entitlements.active["premium"]) {
+        router.replace("/home");
+      } else {
+        console.log("No hay compras activas para restaurar");
+      }
+    } catch (e: any) {
+      console.log("Restore error", e);
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safe, styles.center]}>
+        <ActivityIndicator color={colors.white} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error || (!monthly && !annual)) {
+    return (
+      <SafeAreaView style={[styles.safe, styles.center]}>
+        <Text style={styles.foot}>
+          No pudimos cargar los planes. Revisa tu conexión o la configuración de
+          RevenueCat.
+        </Text>
+        <Text style={styles.foot}>
+          Error: {error ?? "sin mensaje"}
+          {"\n"}
+          Packages encontrados: {packages.length}
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.wrap}>
         <Text style={styles.h1}>
-          Te ayudamos a recordarte del vencimiento de{"\n"}tus documentos importantes
+          Te ayudamos a recordarte del vencimiento de{"\n"}tus documentos
+          importantes
         </Text>
 
         <View style={{ height: 18 }} />
 
         <View style={styles.cards}>
-          <PaywallCard
-            title="3 días gratis"
-            price="$0"
-            sub="luego $10,000 año ($0.833/mes)"
-            footer="Puedes cancelar antes"
-            selected={selected === "trial"}
-            onPress={() => setSelected("trial")}
-          />
+          {hasTrial && annual && (
+            <PaywallCard
+              title="7 días gratis"
+              price="$0"
+              sub={`luego ${annual.product.priceString}/año`}
+              footer="Puedes cancelar antes"
+              selected={selected?.identifier === annual.identifier}
+              onPress={() => setSelected(annual)}
+            />
+          )}
 
-          <PaywallCard
-            title="Plan Mensual"
-            price="$5,000"
-            sub="por mes"
-            selected={selected === "monthly"}
-            onPress={() => setSelected("monthly")}
-          />
+          {monthly && (
+            <PaywallCard
+              title="Plan Mensual"
+              price={monthly.product.priceString}
+              sub="por mes"
+              selected={selected?.identifier === monthly.identifier}
+              onPress={() => setSelected(monthly)}
+            />
+          )}
 
-          <PaywallCard
-            title="Plan Anual"
-            price="$0.833"
-            sub="por mes"
-            footer="facturado anualmente ($10,000)"
-            badge="Ahorra 83%"
-            selected={selected === "annual"}
-            onPress={() => setSelected("annual")}
-          />
+          {annual && (
+            <PaywallCard
+              title="Plan Anual"
+              price={annual.product.priceString}
+              sub="por año"
+              badge="Ahorra"
+              selected={!hasTrial && selected?.identifier === annual.identifier}
+              onPress={() => setSelected(annual)}
+            />
+          )}
         </View>
 
         <Text style={styles.foot}>
@@ -54,11 +132,25 @@ const canContinue = selected !== null;
         <View style={{ height: 14 }} />
 
         <PrimaryButton
-  title="Continuar"
-  onPress={() => router.replace("/home")}
-  disabled={!canContinue}
-  style={{ width: "100%", maxWidth: 520, opacity: canContinue ? 1 : 0.55 }}
-/>
+          title={purchasing ? "Procesando..." : "Continuar"}
+          onPress={handleContinue}
+          disabled={!selected || purchasing}
+          style={{
+            width: "100%",
+            maxWidth: 520,
+            opacity: selected && !purchasing ? 1 : 0.55,
+          }}
+        />
+
+        <Pressable
+          onPress={handleRestore}
+          disabled={restoring}
+          style={{ marginTop: 14 }}
+        >
+          <Text style={styles.restoreText}>
+            {restoring ? "Restaurando..." : "Restaurar compras"}
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -66,6 +158,7 @@ const canContinue = selected !== null;
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  center: { alignItems: "center", justifyContent: "center" },
   wrap: {
     flex: 1,
     alignItems: "center",
@@ -82,11 +175,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     maxWidth: 560,
   },
-  cards: {
-    width: "100%",
-    maxWidth: 520,
-    gap: 16,
-  },
+  cards: { width: "100%", maxWidth: 520, gap: 16 },
   foot: {
     marginTop: 18,
     color: colors.muted,
@@ -95,5 +184,12 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     textAlign: "center",
     lineHeight: 18,
+  },
+  restoreText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
+    textDecorationLine: "underline",
   },
 });

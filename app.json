@@ -62,8 +62,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8e4d4d9c-e842-4bf2-ad6c-edf2a806dda6"
+        "projectId": "a4d7944a-6ae0-4e39-9d63-308e5037d7bd"
       }
-    }
+    },
+    "owner": "nataliaocmo25"
   }
 }

@@ -1,6 +1,7 @@
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import Purchases from "react-native-purchases";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { OnboardingSlide } from "../src/components/OnboardingSlide";
 import { PrimaryButton } from "../src/components/PrimaryButton";
@@ -36,60 +37,119 @@ export default function Onboarding() {
           "¿Tienes varios vehículos? Administra los documentos de todos desde una sola app",
       },
     ],
-    []
+    [],
   );
 
   const [i, setI] = useState(0);
   const isLast = i === slides.length - 1;
 
+  // =========================================================
+  // BOTÓN "COMENZAR"
+  // Aquí es donde ÚNICAMENTE comprobamos RevenueCat
+  // =========================================================
+  const handleStart = async () => {
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+
+      const isPremium = !!customerInfo.entitlements.active["premium"];
+
+      if (isPremium) {
+        // Usuario Premium → entra directamente a Home
+        router.replace("/home");
+        return;
+      }
+
+      // Usuario no Premium → continúa con el onboarding
+      setI(1);
+    } catch (error) {
+      console.error("Error checking RevenueCat:", error);
+
+      // Si RevenueCat falla, continuamos normalmente
+      setI(1);
+    }
+  };
+
+  // =========================================================
+  // BOTÓN "SIGUIENTE"
+  // NO consulta RevenueCat
+  // =========================================================
+  const handleNext = () => {
+    setI((previous) => Math.min(slides.length - 1, previous + 1));
+  };
+
+  // =========================================================
+  // BOTÓN "ANTERIOR"
+  // =========================================================
+  const handlePrevious = () => {
+    setI((previous) => Math.max(0, previous - 1));
+  };
+
+  // =========================================================
+  // BOTÓN "CONTINUAR" DE LA ÚLTIMA SLIDE
+  // NO consulta RevenueCat
+  // =========================================================
+  const handleFinish = () => {
+    router.replace("/questions");
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-  <View style={styles.container}>
-    <View style={styles.content}>
-      <OnboardingSlide {...slides[i]} />
-      <ProgressDots total={slides.length} index={i} />
-    </View>
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <OnboardingSlide {...slides[i]} />
 
-    <View
-      style={[
-        styles.bottomRow,
-        i === 0 && { justifyContent: "center" }, // centra cuando solo hay un botón
-      ]}
-    >
-      {i === 0 ? (
-        <PrimaryButton
-          title="Siguiente"
-          onPress={() => setI(1)}
-          style={{ width: "100%", maxWidth: 520 }}
-        />
-      ) : (
-        <>
-          <SecondaryButton
-            title="Anterior"
-            onPress={() => setI((p) => Math.max(0, p - 1))}
-            style={{ flex: 1 }}
-          />
-          <View style={{ width: 14 }} />
-          <PrimaryButton
-            title={isLast ? "Continuar" : "Siguiente"}
-            onPress={() => {
-              if (isLast) router.replace("/questions");
-              else setI((p) => Math.min(slides.length - 1, p + 1));
-            }}
-            style={{ flex: 1 }}
-          />
-        </>
-      )}
-    </View>
-  </View>
-</SafeAreaView>
+          <ProgressDots total={slides.length} index={i} />
+        </View>
 
+        <View style={[styles.bottomRow, i === 0 && styles.firstSlideRow]}>
+          {i === 0 ? (
+            // =================================================
+            // PRIMERA SLIDE → BOTÓN "COMENZAR"
+            // =================================================
+            <PrimaryButton
+              title="Comenzar"
+              onPress={handleStart}
+              style={{
+                width: "100%",
+                maxWidth: 520,
+              }}
+            />
+          ) : (
+            // =================================================
+            // RESTO DE SLIDES
+            // =================================================
+            <>
+              <SecondaryButton
+                title="Anterior"
+                onPress={handlePrevious}
+                style={{ flex: 1 }}
+              />
+
+              <View style={styles.buttonSpacer} />
+
+              <PrimaryButton
+                title={isLast ? "Continuar" : "Siguiente"}
+                onPress={isLast ? handleFinish : handleNext}
+                style={{ flex: 1 }}
+              />
+            </>
+          )}
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
-  container: { flex: 1 },
+  safe: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+
+  container: {
+    flex: 1,
+  },
+
   content: {
     flex: 1,
     alignItems: "center",
@@ -97,11 +157,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingBottom: 90,
   },
+
   bottomRow: {
     flexDirection: "row",
     paddingHorizontal: 18,
     paddingBottom: 18,
     paddingTop: 8,
     alignItems: "center",
+  },
+
+  firstSlideRow: {
+    justifyContent: "center",
+  },
+
+  buttonSpacer: {
+    width: 14,
   },
 });
