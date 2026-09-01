@@ -14,7 +14,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "bundleIdentifier": "com.san1t.CarApp",
+      "bundleIdentifier": "com.carapp.reminders",
       "buildNumber": "1",
       "supportsTablet": true,
       "infoPlist": {
@@ -25,7 +25,7 @@
       }
     },
     "android": {
-      "package": "com.san1t.CarApp",
+      "package": "com.carapp.reminders",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
