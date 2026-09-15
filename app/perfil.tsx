@@ -9,14 +9,16 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Perfil() {
   const [name, setName] = useState("");
 
-  useEffect(() => { getProfile(); }, []);
+  useEffect(() => {
+    getProfile();
+  }, []);
 
   async function getProfile() {
     try {
@@ -50,7 +52,8 @@ export default function Perfil() {
   async function handleShare() {
     try {
       await Share.share({
-        message: "Descarga CarApp y mantén tus documentos vehiculares al día 🚗",
+        message:
+          "Descarga CarApp y mantén tus documentos vehiculares al día 🚗",
       });
     } catch (error) {
       console.log(error);
@@ -70,7 +73,11 @@ export default function Perfil() {
 
         {/* AVATAR */}
         <View style={styles.avatar}>
-          <MaterialIcons name="person" size={38} color="rgba(255,255,255,0.7)" />
+          <MaterialIcons
+            name="person"
+            size={38}
+            color="rgba(255,255,255,0.7)"
+          />
         </View>
 
         {/* NOMBRE */}
@@ -99,7 +106,9 @@ export default function Perfil() {
         <View style={styles.row}>
           {/* CÉDULA */}
           <Pressable style={styles.card} onPress={() => router.push("/cedula")}>
-            <View style={[styles.iconContainer, { backgroundColor: "#2563eb" }]}>
+            <View
+              style={[styles.iconContainer, { backgroundColor: "#2563eb" }]}
+            >
               <MaterialIcons name="badge" size={28} color="#fff" />
             </View>
             <Text style={styles.cardTitle}>Cédula</Text>
@@ -107,11 +116,20 @@ export default function Perfil() {
           </Pressable>
 
           {/* LICENCIA */}
-          <Pressable style={styles.card} onPress={() => router.push("/licencia")}>
-            <View style={[styles.iconContainer, { backgroundColor: "#16a34a" }]}>
+          <Pressable
+            style={styles.card}
+            onPress={() => router.push("/licencia")}
+          >
+            <View
+              style={[styles.iconContainer, { backgroundColor: "#16a34a" }]}
+            >
               <MaterialIcons name="credit-card" size={28} color="#fff" />
             </View>
-            <Text style={styles.cardTitle} numberOfLines={2} adjustsFontSizeToFit>
+            <Text
+              style={styles.cardTitle}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+            >
               Licencia de conducción
             </Text>
             <Text style={styles.cardSub}>Añadir información</Text>
@@ -136,7 +154,12 @@ export default function Perfil() {
               </Text>
             </View>
             <Pressable style={styles.shareBtn} onPress={handleShare}>
-              <MaterialIcons name="share" size={18} color="#111" style={{ marginRight: 6 }} />
+              <MaterialIcons
+                name="share"
+                size={18}
+                color="#111"
+                style={{ marginRight: 6 }}
+              />
               <Text style={styles.shareTxt}>Compartir</Text>
             </Pressable>
           </View>
@@ -153,13 +176,19 @@ export default function Perfil() {
           <Text style={styles.aboutTitle}>Acerca de CarApp</Text>
           <Text style={styles.aboutTxt}>Versión: 1.0.0</Text>
           <Text style={styles.aboutTxt}>
-            Desarrollado para ayudarte a mantener tus documentos vehiculares al día
+            Desarrollado para ayudarte a mantener tus documentos vehiculares al
+            día
           </Text>
-          <Text style={styles.copy}>© 2024 CarApp. Todos los derechos reservados.</Text>
+          <Text style={styles.copy}>
+            © 2024 CarApp. Todos los derechos reservados.
+          </Text>
         </View>
 
         {/* BOTÓN HOME */}
-        <Pressable style={styles.homeBtn} onPress={() => router.replace("/home")}>
+        <Pressable
+          style={styles.homeBtn}
+          onPress={() => router.replace("/home")}
+        >
           <Text style={styles.homeTxt}>🏠 Volver a inicio</Text>
         </Pressable>
       </ScrollView>
@@ -172,7 +201,12 @@ const styles = StyleSheet.create({
   body: { padding: 18, gap: 14 },
   header: { flexDirection: "row", alignItems: "center", gap: 10 },
   back: { color: "white", fontSize: 22, fontWeight: "900" },
-  title: { color: "white", fontSize: 22, fontWeight: "900", fontStyle: "italic" },
+  title: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "900",
+    fontStyle: "italic",
+  },
   avatar: {
     width: 80,
     height: 80,
@@ -191,7 +225,13 @@ const styles = StyleSheet.create({
     color: "white",
   },
   help: { color: "rgba(255,255,255,0.45)", fontSize: 12 },
-  section: { marginTop: 10, color: "white", fontWeight: "900", fontStyle: "italic", fontSize: 16 },
+  section: {
+    marginTop: 10,
+    color: "white",
+    fontWeight: "900",
+    fontStyle: "italic",
+    fontSize: 16,
+  },
   row: { flexDirection: "row", gap: 12 },
 
   card: {
@@ -236,10 +276,24 @@ const styles = StyleSheet.create({
   warning: { backgroundColor: "#3b2400", padding: 14, borderRadius: 12 },
   warningTxt: { color: "#facc15", fontWeight: "800", fontStyle: "italic" },
 
-  inviteCard: { backgroundColor: "#1e293b", padding: 16, borderRadius: 14, gap: 12 },
-  inviteRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  inviteCard: {
+    backgroundColor: "#1e293b",
+    padding: 16,
+    borderRadius: 14,
+    gap: 12,
+  },
+  inviteRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   inviteTitle: { color: "white", fontWeight: "900", fontStyle: "italic" },
-  inviteSub: { color: "rgba(255,255,255,0.5)", fontSize: 12, fontStyle: "italic", marginTop: 2 },
+  inviteSub: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 12,
+    fontStyle: "italic",
+    marginTop: 2,
+  },
   shareBtn: {
     backgroundColor: "#e5e7eb",
     paddingHorizontal: 14,

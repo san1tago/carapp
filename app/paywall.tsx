@@ -22,7 +22,32 @@ export default function Paywall() {
 
   const monthly = packages.find((p) => p.packageType === "MONTHLY");
   const annual = packages.find((p) => p.packageType === "ANNUAL");
-  const hasTrial = !!annual?.product.introPrice;
+
+  function formatCurrency(amount: number, currencyCode?: string) {
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: currencyCode ?? "USD",
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } catch {
+      return `$${Math.round(amount).toLocaleString()}`;
+    }
+  }
+
+  const annualMonthlyEquivalent = annual
+    ? formatCurrency(
+        annual.product.price / 12,
+        (annual.product as any).currencyCode,
+      )
+    : null;
+
+  const savingsPercent =
+    monthly && annual
+      ? Math.round(
+          (1 - annual.product.price / 12 / monthly.product.price) * 100,
+        )
+      : null;
 
   async function handleContinue() {
     if (!selected) return;
@@ -92,11 +117,11 @@ export default function Paywall() {
         <View style={{ height: 18 }} />
 
         <View style={styles.cards}>
-          {hasTrial && annual && (
+          {annual && (
             <PaywallCard
-              title="7 días gratis"
+              title="3 días gratis"
               price="$0"
-              sub={`luego ${annual.product.priceString}/año`}
+              sub={`luego ${annual.product.priceString} año (${annualMonthlyEquivalent}/mes)`}
               footer="Puedes cancelar antes"
               selected={selected?.identifier === annual.identifier}
               onPress={() => setSelected(annual)}
@@ -116,10 +141,14 @@ export default function Paywall() {
           {annual && (
             <PaywallCard
               title="Plan Anual"
-              price={annual.product.priceString}
-              sub="por año"
-              badge="Ahorra"
-              selected={!hasTrial && selected?.identifier === annual.identifier}
+              price={annualMonthlyEquivalent ?? annual.product.priceString}
+              sub={`por mes\nfacturado anualmente (${annual.product.priceString})`}
+              badge={
+                savingsPercent && savingsPercent > 0
+                  ? `Ahorra ${savingsPercent}%`
+                  : "Ahorra"
+              }
+              selected={selected?.identifier === annual.identifier}
               onPress={() => setSelected(annual)}
             />
           )}

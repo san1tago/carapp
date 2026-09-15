@@ -1,5 +1,5 @@
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
 import {
   FlatList,
   Pressable,
@@ -14,38 +14,54 @@ import { colors } from "../src/theme/colors";
 export default function Home() {
   const { vehicles } = useVehicles();
 
-  // 🔥 FUNCIÓN DE ICONO
+  // 🔥 FUNCIÓN DE ICONO (ahora con íconos vectoriales, no emojis)
   const getVehicleIcon = (type?: string) => {
     const t = type?.toLowerCase();
+    const size = 26;
+    const color = colors.white;
 
     switch (t) {
       case "carro":
       case "auto":
-        return "🚗";
+        return <Ionicons name="car-outline" size={size} color={color} />;
 
       case "moto":
       case "motocicleta":
-        return "🏍️";
+        return (
+          <MaterialCommunityIcons name="motorbike" size={size} color={color} />
+        );
 
       case "camion":
       case "camión":
-        return "🚛";
+        return (
+          <MaterialCommunityIcons
+            name="truck-outline"
+            size={size}
+            color={color}
+          />
+        );
 
       case "bus":
       case "buseta":
-        return "🚌";
+        return <Ionicons name="bus-outline" size={size} color={color} />;
 
       case "van":
-        return "🚐";
+        return (
+          <MaterialCommunityIcons
+            name="van-utility"
+            size={size}
+            color={color}
+          />
+        );
 
       case "bicicleta":
-        return "🚲";
+        return <Ionicons name="bicycle-outline" size={size} color={color} />;
 
       case "taxi":
-        return "🚕"; // ✅ TAXI
+        return <Ionicons name="car-outline" size={size} color={color} />;
 
       default:
-        return "🚗";
+        return <Ionicons name="car-outline" size={size} color={color} />;
     }
   };
 
@@ -89,9 +105,9 @@ export default function Home() {
                   }
                 >
                   {/* 🔥 ICONO DINÁMICO */}
-                  <Text style={styles.vehicleIcon}>
+                  <View style={styles.vehicleIcon}>
                     {getVehicleIcon(item.type)}
-                  </Text>
+                  </View>
 
                   <Text style={styles.vehicleName}>{item.name}</Text>
                 </Pressable>
@@ -103,10 +119,6 @@ export default function Home() {
 
       {/* Barra inferior */}
       <View style={styles.bottomBar}>
-        <Pressable onPress={() => router.push("/perfil")}>
-          <Text style={styles.profileIcon}>👤</Text>
-        </Pressable>
-
         {vehicles.length > 0 && (
           <Pressable
             style={styles.addBtn}
@@ -115,6 +127,14 @@ export default function Home() {
             <Text style={styles.addTxt}>＋</Text>
           </Pressable>
         )}
+
+        <Pressable onPress={() => router.push("/perfil")}>
+          <Ionicons
+            name="person-outline"
+            size={30}
+            color="rgba(255,255,255,0.8)"
+          />
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -124,7 +144,8 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   wrap: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 28,
   },
 
   plus: {
@@ -140,13 +161,14 @@ const styles = StyleSheet.create({
   },
 
   bottomBar: {
-    height: 70,
+    height: 110,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.08)",
+    borderTopColor: "rgba(255,255,255,0.12)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
+    paddingBottom: 10,
   },
 
   emptyCard: {
@@ -165,28 +187,31 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: "900",
     fontSize: 20,
-    marginBottom: 14,
+    marginBottom: 22,
+    marginTop: 22,
   },
 
   vehicleCard: {
     flex: 1,
-    height: 90,
-    borderRadius: 14,
+    height: 132,
+    borderRadius: 18,
     backgroundColor: colors.card2,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
+    gap: 10,
   },
 
   list: {
-    paddingBottom: 120,
+    paddingBottom: 40,
     gap: 16,
   },
 
   vehicleIcon: {
-    fontSize: 22, // 🔥 un poco más grande para que se vea mejor
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   vehicleName: {
@@ -195,15 +220,10 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
 
-  profileIcon: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 20,
-  },
-
   addBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: "#e5e7eb",
     alignItems: "center",
     justifyContent: "center",
